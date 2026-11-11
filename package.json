@@ -1,0 +1,21 @@
+{
+  "name": "aurora-streaming",
+  "version": "1.0.0",
+  "description": "Production-ready movie and TV streaming application inspired by Netflix and 123Movies",
+  "main": "server/server.js",
+  "scripts": {
+    "start": "node server/server.js",
+    "dev": "node server/server.js"
+  },
+  "keywords": [
+    "streaming",
+    "movies",
+    "tv-shows",
+    "tmdb",
+    "vidsrc",
+    "netflix",
+    "123movies"
+  ],
+  "author": "Aurora Team",
+  "license": "MIT"
+}

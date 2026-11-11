@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aurora - Curated Cinema &amp; Streaming</title>
+  <meta name="description" content="Step into a world of unforgettable cinema. Stream thousands of trending movies, TV shows, and cartoons online in 4K Ultra HD for free with Aurora.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;800;900&family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,900;1,400;1,600;1,700;1,900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css?v=4.0">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎬</text></svg>">
+</head>
+<body class="theme-noir">
+
+  <!-- ======================================================================
+       1. CINEMATIC STARTER / WELCOME SCREEN (IMAGE 2 REFERENCE)
+       ====================================================================== -->
+  <section class="starter-screen" id="starterScreen">
+    <!-- Left 35mm Vintage Film Strip -->
+    <div class="film-strip-edge">
+      <div class="film-track-meta">KODAK 5222</div>
+      <div class="film-perforations-wrap">
+        <div class="sprocket-hole"></div>
+        <div class="sprocket-hole"></div>
+        <div class="sprocket-hole"></div>
+        <div class="sprocket-hole"></div>
+        <div class="sprocket-hole"></div>
+        <div class="sprocket-hole"></div>
+        <div class="sprocket-hole"></div>
+        <div class="sprocket-hole"></div>
+        <div class="sprocket-hole"></div>
+        <div class="sprocket-hole"></div>
+        <div class="sprocket-hole"></div>
+        <div class="sprocket-hole"></div>
+      </div>
+      <div class="film-frame-number">36</div>
+    </div>
+
+    <!-- Atmospheric Noir Cinema Background -->
+    <div class="starter-bg-noir">
+      <div class="noir-rain-layer"></div>
+      <div class="noir-cinema-marquee">
+        <div class="marquee-sign">
+          <span class="marquee-title-glow">AURORA</span>
+          <span class="marquee-sub">CINEMA</span>
+        </div>
+      </div>
+      <div class="noir-silhouette-figure"></div>
+    </div>
+
+    <!-- Thin Crimson Camera Frame Overlay -->
+    <div class="starter-red-frame">
+      <div class="frame-crosshair ch-tl"></div>
+      <div class="frame-crosshair ch-tr"></div>
+      <div class="frame-crosshair ch-bl"></div>
+      <div class="frame-crosshair ch-br"></div>
+    </div>
+
+    <!-- Starter Top Navigation -->
+    <div class="starter-header">
+      <div class="starter-logo">
+        <span class="serif-brand">AURORA</span>
+      </div>
+      <div class="starter-header-links">
+        <button class="starter-nav-btn" id="starterMemberAccessBtn">MEMBER ACCESS</button>
+        <button class="starter-nav-btn starter-explore-btn" id="starterExploreBtn">EXPLORE</button>
+      </div>
+    </div>
+
+    <!-- Center-Left Hero Editorial Content -->
+    <div class="starter-hero-content">
+      <div class="starter-eyebrow">WELCOME TO AURORA</div>
+      <h1 class="starter-editorial-title">
+        <span>Every night</span>
+        <span class="italic-serif">has a story.</span>
+      </h1>
+      <p class="starter-tagline">Step into a world of unforgettable cinema.</p>
+
+      <div class="starter-cta-actions">
+        <button class="btn starter-enter-btn" id="starterEnterBtn">
+          <span>Enter the experience</span>
+          <svg class="arrow-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+            <polyline points="12 5 19 12 12 19"></polyline>
+          </svg>
+        </button>
+        <button class="btn starter-signin-btn" id="starterSignInBtn">Sign in</button>
+      </div>
+
+      <!-- Quick Auth Panel embedded directly in starter scene (toggleable) -->
+      <div class="starter-auth-panel" id="starterAuthPanel" style="display: none;">
+        <div class="starter-auth-card">
+          <div class="starter-auth-header">
+            <div class="auth-tabs">
+              <button class="auth-tab active" id="starterTabSignIn">Sign In</button>
+              <button class="auth-tab" id="starterTabSignUp">New Account</button>
+            </div>
+            <button class="modal-close-icon" id="starterAuthCloseBtn">&times;</button>
+          </div>
+          <form id="starterAuthForm">
+            <div class="auth-error-msg" id="starterAuthError" style="display: none;"></div>
+            
+            <div class="form-group" id="starterUsernameGroup" style="display: none;">
+              <label>Username</label>
+              <input type="text" id="starterUsernameInput" placeholder="Choose a username" autocomplete="username">
+            </div>
+
+            <div class="form-group">
+              <label id="starterEmailLabel">Email or Username</label>
+              <input type="text" id="starterEmailInput" placeholder="name@example.com" required autocomplete="email">
+            </div>
+
+            <div class="form-group">
+              <label>Password</label>
+              <input type="password" id="starterPasswordInput" placeholder="Your secret password" required autocomplete="current-password">
+            </div>
+
+            <button type="submit" class="btn btn-primary starter-submit-btn" id="starterSubmitBtn">Sign In</button>
+          </form>
+          <div class="starter-auth-footer">
+            <button type="button" class="guest-quick-link" id="starterGuestLink">Or continue as Guest &rarr;</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom Cinematic Metadata Strip -->
+    <div class="starter-footer-meta">
+      <div class="starter-meta-left">
+        <span>CURATED CINEMA</span>
+        <span class="meta-dot">&bull;</span>
+        <span>4K ULTRA HD</span>
+        <span class="meta-dot">&bull;</span>
+        <span>AURORA ORIGINALS</span>
+      </div>
+      <div class="starter-meta-right">
+        <span>RLL 001</span>
+        <span>24FPS</span>
+        <span>4K</span>
+        <span>1.85:1</span>
+        <span class="play-symbol">&#9654;</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======================================================================
+       2. TOP APP NAVIGATION BAR (CATALOG & STREAMING)
+       ====================================================================== -->
+  <header class="navbar" id="navbar">
+    <div class="nav-container">
+      <div class="nav-left">
+        <a href="#" class="brand-logo" id="brandLogo">
+          <span class="brand-gradient">AURORA</span>
+          <span class="brand-badge">NOIR</span>
+        </a>
+        <nav class="nav-links">
+          <button class="nav-link active" data-tab="trending">Home</button>
+          <button class="nav-link" data-tab="movies">Movies</button>
+          <button class="nav-link" data-tab="tv">TV Series</button>
+          <button class="nav-link" data-tab="cartoons">Cartoons</button>
+          <button class="nav-link" data-tab="watchlist">Watchlist <span class="watchlist-count" id="watchlistCount">0</span></button>
+          <button class="nav-link" data-tab="profile">Profile</button>
+        </nav>
+      </div>
+
+      <div class="nav-right">
+        <!-- Live Search Bar -->
+        <div class="search-box">
+          <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <input type="text" id="searchInput" placeholder="Search films, series..." autocomplete="off">
+          <button class="search-clear-btn" id="searchClearBtn" aria-label="Clear search">&times;</button>
+          <div class="search-dropdown" id="searchDropdown"></div>
+        </div>
+
+        <!-- User / Profile Pill -->
+        <div class="auth-nav-area">
+          <button class="btn btn-primary btn-sm btn-signin" id="navSignInBtn">Sign In</button>
+
+          <div class="user-profile-menu" id="navUserProfileMenu" style="display: none;">
+            <button class="profile-pill-btn" id="navProfilePillBtn" aria-label="User Profile Menu">
+              <div class="avatar-badge avatar-sm avatar-red" id="navProfileAvatar"></div>
+              <span class="profile-pill-name" id="navProfileName">Alex</span>
+              <svg class="dropdown-caret" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M7 10l5 5 5-5z"/>
+              </svg>
+            </button>
+
+            <!-- Dropdown Menu -->
+            <div class="profile-dropdown-menu" id="profileDropdownMenu">
+              <div class="dropdown-profiles-header">Switch Profile</div>
+              <div class="dropdown-profiles-list" id="dropdownProfilesList"></div>
+              <div class="dropdown-divider"></div>
+              <button class="dropdown-item" id="menuOpenProfileViewBtn">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+                My Profile Dashboard
+              </button>
+              <button class="dropdown-item" id="menuSwitchProfileBtn">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+                Who's Watching?
+              </button>
+              <button class="dropdown-item" id="menuManageProfilesBtn">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+                Manage Profiles
+              </button>
+              <button class="dropdown-item" id="menuAccountHubBtn">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/></svg>
+                Account &amp; Security
+              </button>
+              <div class="dropdown-divider"></div>
+              <div class="dropdown-user-email" id="dropdownUserEmail">account@aurora.com</div>
+              <button class="dropdown-item text-danger" id="menuSignOutBtn">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg>
+                Sign Out of Aurora
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mobile Menu Toggle Button -->
+        <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Open Navigation Menu">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Mobile Nav Drawer -->
+    <div class="mobile-drawer" id="mobileDrawer">
+      <button class="mobile-nav-link active" data-tab="trending">Home</button>
+      <button class="mobile-nav-link" data-tab="movies">Movies</button>
+      <button class="mobile-nav-link" data-tab="tv">TV Series</button>
+      <button class="mobile-nav-link" data-tab="cartoons">Cartoons</button>
+      <button class="mobile-nav-link" data-tab="watchlist">My Watchlist (<span class="mobile-watchlist-count">0</span>)</button>
+      <button class="mobile-nav-link" data-tab="profile">Profile Dashboard</button>
+      <div class="mobile-drawer-auth" id="mobileDrawerAuth">
+        <button class="btn btn-primary btn-sm btn-block" id="mobileSignInBtn">Sign In / Register</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ======================================================================
+       3. PROFILE DASHBOARD VIEW (IMAGE 3 REFERENCE)
+       ====================================================================== -->
+  <section class="profile-view-screen" id="profileViewScreen" style="display: none;">
+    <div class="profile-view-container">
+      <!-- Profile Screen Top Bar -->
+      <div class="profile-view-top-bar">
+        <div class="profile-view-brand">
+          <svg class="film-reel-icon" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M18 4l2 4h-3l-2-4h-2l2 4h-3l-2-4H8l2 4H7L5 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4h-4z"/>
+          </svg>
+          <span class="profile-view-logo-text">AURORA</span>
+        </div>
+        <div class="profile-view-top-right">
+          <button class="profile-notify-btn" title="Notifications">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+              <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Theater Atmosphere Banner with Projector & Seats -->
+      <div class="profile-theater-banner">
+        <div class="theater-projector-light"></div>
+        <div class="theater-screen-glow"></div>
+        <div class="theater-silhouette-seats"></div>
+      </div>
+
+      <!-- User Profile Header Card -->
+      <div class="profile-user-hero">
+        <div class="profile-avatar-neon-wrap">
+          <div class="profile-avatar-circle" id="profileViewAvatar">
+            <!-- Avatar rendered -->
+          </div>
+          <div class="avatar-neon-ring"></div>
+        </div>
+        <div class="profile-user-info">
+          <h2 class="profile-user-name" id="profileViewName">Alex Morgan</h2>
+          <div class="profile-premium-badge">
+            <span class="crown-icon">&#128081;</span>
+            <span class="badge-text" id="profileBadgeText">Premium Member</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Profile Menu Options (Styled exactly like Image 3 reference) -->
+      <div class="profile-menu-cards-list">
+        <!-- 1. My Watchlist (Active Highlight) -->
+        <button class="profile-menu-card active-card" id="profileMenuWatchlist">
+          <div class="menu-card-left">
+            <svg class="menu-card-icon" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+            </svg>
+            <span class="menu-card-title">My Watchlist</span>
+          </div>
+          <div class="menu-card-right">
+            <span class="menu-card-count" id="profileWatchlistBadgeCount">0</span>
+            <svg class="chevron-icon" viewBox="0 0 24 24"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/></svg>
+          </div>
+        </button>
+
+        <!-- 2. Continue Watching -->
+        <button class="profile-menu-card" id="profileMenuHistory">
+          <div class="menu-card-left">
+            <svg class="menu-card-icon" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/>
+            </svg>
+            <span class="menu-card-title">Continue Watching</span>
+          </div>
+          <div class="menu-card-right">
+            <svg class="chevron-icon" viewBox="0 0 24 24"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/></svg>
+          </div>
+        </button>
+
+        <!-- 3. Switch Profile ("Who's Watching?") -->
+        <button class="profile-menu-card" id="profileMenuSwitch">
+          <div class="menu-card-left">
+            <svg class="menu-card-icon" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/>
+            </svg>
+            <span class="menu-card-title">Switch Profile</span>
+          </div>
+          <div class="menu-card-right">
+            <span class="menu-sub-info" id="profileSubProfilesCount">Profiles</span>
+            <svg class="chevron-icon" viewBox="0 0 24 24"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/></svg>
+          </div>
+        </button>
+
+        <!-- 4. Manage Profiles & Avatars -->
+        <button class="profile-menu-card" id="profileMenuManage">
+          <div class="menu-card-left">
+            <svg class="menu-card-icon" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+            </svg>
+            <span class="menu-card-title">Manage Profiles &amp; Avatars</span>
+          </div>
+          <div class="menu-card-right">
+            <svg class="chevron-icon" viewBox="0 0 24 24"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/></svg>
+          </div>
+        </button>
+
+        <!-- 5. Playback & Language -->
+        <button class="profile-menu-card" id="profileMenuPlayback">
+          <div class="menu-card-left">
+            <svg class="menu-card-icon" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M21 3H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h5v2h8v-2h5c1.1 0 1.99-.9 1.99-2L23 5c0-1.1-.9-2-2-2zm0 14H3V5h18v12z"/>
+            </svg>
+            <span class="menu-card-title">Playback &amp; Multi-Server</span>
+          </div>
+          <div class="menu-card-right">
+            <span class="menu-sub-info">VidSrc • 1080p</span>
+            <svg class="chevron-icon" viewBox="0 0 24 24"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/></svg>
+          </div>
+        </button>
+
+        <!-- 6. VIP Subscription -->
+        <button class="profile-menu-card" id="profileMenuSubscription">
+          <div class="menu-card-left">
+            <svg class="menu-card-icon" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M20 4H4c-1.11 0-1.99.89-1.99 2L2 18c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z"/>
+            </svg>
+            <span class="menu-card-title">VIP Membership</span>
+          </div>
+          <div class="menu-card-right">
+            <span class="menu-sub-info text-success">Lifetime Active</span>
+            <svg class="chevron-icon" viewBox="0 0 24 24"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/></svg>
+          </div>
+        </button>
+
+        <!-- 7. Account & Security -->
+        <button class="profile-menu-card" id="profileMenuAccount">
+          <div class="menu-card-left">
+            <svg class="menu-card-icon" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/>
+            </svg>
+            <span class="menu-card-title">Account &amp; Security</span>
+          </div>
+          <div class="menu-card-right">
+            <svg class="chevron-icon" viewBox="0 0 24 24"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/></svg>
+          </div>
+        </button>
+
+        <!-- 8. Sign Out -->
+        <button class="profile-menu-card text-danger-card" id="profileMenuSignOut">
+          <div class="menu-card-left">
+            <svg class="menu-card-icon" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/>
+            </svg>
+            <span class="menu-card-title">Sign Out of Aurora</span>
+          </div>
+          <div class="menu-card-right">
+            <svg class="chevron-icon" viewBox="0 0 24 24"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/></svg>
+          </div>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======================================================================
+       4. NETFLIX "WHO'S WATCHING?" FULLSCREEN SCREEN
+       ====================================================================== -->
+  <div class="profiles-screen" id="profilesScreen" style="display: none;">
+    <!-- Left 35mm Vintage Film Strip -->
+    <div class="film-strip-edge">
+      <div class="film-track-meta">AURORA 5222</div>
+      <div class="film-perforations-wrap">
+        <div class="sprocket-hole"></div>
+        <div class="sprocket-hole"></div>
+        <div class="sprocket-hole"></div>
+        <div class="sprocket-hole"></div>
+        <div class="sprocket-hole"></div>
+        <div class="sprocket-hole"></div>
+        <div class="sprocket-hole"></div>
+        <div class="sprocket-hole"></div>
+      </div>
+      <div class="film-frame-number">01</div>
+    </div>
+
+    <!-- Thin Crimson Camera Frame Overlay -->
+    <div class="starter-red-frame">
+      <div class="frame-crosshair ch-tl"></div>
+      <div class="frame-crosshair ch-tr"></div>
+      <div class="frame-crosshair ch-bl"></div>
+      <div class="frame-crosshair ch-br"></div>
+    </div>
+
+    <div class="profiles-backdrop-collage"></div>
+    <div class="profiles-container">
+      <div class="profiles-brand-tag">
+        <span class="serif-brand">AURORA</span>
+        <span class="brand-badge">PROFILES</span>
+      </div>
+      <h1 class="profiles-heading" id="profilesHeading">Who's watching?</h1>
+      <p class="profiles-subheading" id="profilesSubheading">Select a profile to step into your personalized recommendations</p>
+      
+      <div class="profiles-grid" id="profilesGrid"></div>
+
+      <div class="profiles-actions">
+        <button class="btn btn-secondary profiles-manage-btn" id="manageProfilesToggleBtn">MANAGE PROFILES</button>
+        <button class="btn btn-secondary profiles-done-btn" id="manageProfilesDoneBtn" style="display: none;">DONE</button>
+      </div>
+
+      <div class="profiles-footer-links">
+        <button class="text-link-btn" id="profilesSwitchAccountBtn">Switch Account</button>
+        <span class="footer-dot">&bull;</span>
+        <button class="text-link-btn" id="profilesBrowseGuestBtn">Browse as Guest</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================================================================
+       5. MAIN CATALOG & STREAMING CONTENT
+       ====================================================================== -->
+  <div class="catalog-view" id="catalogView">
+    <!-- Hero Featured Banner -->
+    <section class="hero-banner" id="heroBanner">
+      <div class="hero-backdrop" id="heroBackdrop"></div>
+      <div class="hero-overlay"></div>
+      <div class="hero-content">
+        <div class="hero-badge" id="heroBadge">FEATURED SPOTLIGHT</div>
+        <h1 class="hero-title" id="heroTitle">Loading Featured Title...</h1>
+        <div class="hero-meta" id="heroMeta">
+          <span class="hero-rating"><span class="star-icon">&#9733;</span> <span id="heroRating">8.5</span></span>
+          <span class="hero-pill" id="heroQuality">4K ULTRA HD</span>
+          <span class="hero-pill" id="heroType">MOVIE</span>
+          <span class="hero-year" id="heroYear">2024</span>
+          <span class="hero-genres" id="heroGenres">Action, Adventure</span>
+        </div>
+        <p class="hero-overview" id="heroOverview">Discover and stream the newest top-rated blockbusters and critically acclaimed TV shows directly in high definition with zero interruptions.</p>
+        <div class="hero-actions">
+          <button class="btn btn-primary" id="heroWatchBtn">
+            <svg class="btn-icon" viewBox="0 0 24 24" fill="currentColor">
+              <polygon points="5 3 19 12 5 21 5 3"></polygon>
+            </svg>
+            Watch Now
+          </button>
+          <button class="btn btn-secondary" id="heroDetailsBtn">
+            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="16" x2="12" y2="12"></line>
+              <line x1="12" y1="8" x2="12.01" y2="8"></line>
+            </svg>
+            Details
+          </button>
+        </div>
+      </div>
+
+      <div class="hero-dots" id="heroDots"></div>
+    </section>
+
+    <!-- Main Content Container -->
+    <main class="main-content">
+      <!-- Continue Watching Section -->
+      <div class="continue-watching-section" id="continueWatchingSection" style="display: none;">
+        <div class="section-title-wrap">
+          <h2 class="section-title">Continue Watching</h2>
+          <span class="section-subtitle">Pick up right where you left off</span>
+        </div>
+        <div class="continue-watching-grid" id="continueWatchingGrid"></div>
+      </div>
+
+      <!-- Category Header and Filter Bar -->
+      <div class="section-header">
+        <div class="section-title-wrap">
+          <h2 class="section-title" id="sectionTitle">Trending Today</h2>
+          <span class="section-subtitle" id="sectionSubtitle">Popular across all platforms</span>
+        </div>
+
+        <div class="filter-pills" id="genreFilterPills">
+          <button class="filter-pill active" data-genre="all">All</button>
+          <button class="filter-pill" data-genre="28">Action</button>
+          <button class="filter-pill" data-genre="35">Comedy</button>
+          <button class="filter-pill" data-genre="18">Drama</button>
+          <button class="filter-pill" data-genre="878">Sci-Fi</button>
+          <button class="filter-pill" data-genre="27">Horror</button>
+          <button class="filter-pill" data-genre="16">Animation</button>
+        </div>
+      </div>
+
+      <!-- 123Movies Card Grid -->
+      <div class="media-grid" id="mediaGrid"></div>
+
+      <!-- Loading Skeleton / Spinner -->
+      <div class="loading-state" id="loadingState">
+        <div class="spinner"></div>
+        <p>Loading curated cinema...</p>
+      </div>
+
+      <!-- Empty State -->
+      <div class="empty-state" id="emptyState" style="display: none;">
+        <div class="empty-icon">&#127916;</div>
+        <h3 class="empty-title" id="emptyTitle">No titles found</h3>
+        <p class="empty-desc" id="emptyDesc">Try searching for a different title or select another category.</p>
+        <button class="btn btn-secondary" id="emptyResetBtn">Back to Home</button>
+      </div>
+
+      <!-- Pagination Controls -->
+      <div class="pagination-bar" id="paginationBar">
+        <button class="btn btn-secondary" id="prevPageBtn" disabled>&laquo; Previous</button>
+        <span class="page-indicator" id="pageIndicator">Page 1</span>
+        <button class="btn btn-secondary" id="nextPageBtn">Next &raquo;</button>
+      </div>
+    </main>
+  </div>
+
+  <!-- ======================================================================
+       6. VIDEO STREAMING PLAYER MODAL
+       ====================================================================== -->
+  <div class="modal-overlay" id="playerModal" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <div class="modal-title-wrap">
+          <h3 class="modal-title" id="modalMediaTitle">Playing Video</h3>
+          <span class="modal-meta-tag" id="modalMetaTag">1080p Full HD</span>
+        </div>
+        <div class="modal-header-actions">
+          <button class="modal-tool-btn" id="modalExternalBtn" title="Open Stream in New Window">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+              <polyline points="15 3 21 3 21 9"></polyline>
+              <line x1="10" y1="14" x2="21" y2="3"></line>
+            </svg>
+          </button>
+          <button class="modal-tool-btn modal-close-btn" id="modalCloseBtn" title="Close Player (Esc)">&times;</button>
+        </div>
+      </div>
+
+      <div class="modal-body">
+        <div class="player-wrapper">
+          <iframe
+            id="videoIframe"
+            class="video-iframe"
+            src=""
+            allowfullscreen
+            scrolling="no"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+          ></iframe>
+          <div class="player-loader" id="playerLoader">
+            <div class="spinner"></div>
+            <span>Connecting to high-speed stream server...</span>
+          </div>
+        </div>
+
+        <!-- Server Selector Bar -->
+        <div class="server-bar">
+          <div class="server-label">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect>
+              <rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect>
+              <line x1="6" y1="6" x2="6.01" y2="6"></line>
+              <line x1="6" y1="18" x2="6.01" y2="18"></line>
+            </svg>
+            <span>SELECT SERVER:</span>
+          </div>
+          <div class="server-pills" id="serverPills"></div>
+        </div>
+
+        <!-- TV Episodes Selector Bar -->
+        <div class="tv-episodes-section" id="tvEpisodesSection" style="display: none;">
+          <div class="tv-controls-header">
+            <div class="season-select-wrap">
+              <label for="seasonSelect">Season:</label>
+              <select id="seasonSelect" class="season-select"></select>
+            </div>
+            <div class="episode-info-text" id="episodeCountText">Loading episodes...</div>
+          </div>
+          <div class="episodes-scroll-container">
+            <div class="episodes-chips-grid" id="episodesChipsGrid"></div>
+          </div>
+        </div>
+
+        <!-- Media Details Area -->
+        <div class="media-details-area">
+          <div class="details-left">
+            <img id="modalPoster" class="modal-poster" src="" alt="Poster">
+          </div>
+          <div class="details-right">
+            <div class="details-badges">
+              <span class="detail-badge rating-badge">&#9733; <span id="modalRating">8.5</span></span>
+              <span class="detail-badge" id="modalYear">2024</span>
+              <span class="detail-badge" id="modalRuntime">120 min</span>
+              <span class="detail-badge type-badge" id="modalTypeBadge">MOVIE</span>
+            </div>
+            <div class="details-genres" id="modalGenres"></div>
+            <p class="details-overview" id="modalOverview"></p>
+
+            <div class="cast-container">
+              <h4 class="cast-heading">Starring Cast:</h4>
+              <div class="cast-list" id="modalCastList"></div>
+            </div>
+
+            <div class="details-footer-actions">
+              <button class="btn btn-secondary btn-sm" id="modalWatchlistBtn">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+                </svg>
+                <span id="modalWatchlistText">Bookmark to Watchlist</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================================================================
+       7. PROFILE EDIT / CREATE MODAL
+       ====================================================================== -->
+  <div class="modal-overlay" id="profileEditModal" aria-hidden="true">
+    <div class="profile-edit-dialog">
+      <div class="modal-header">
+        <h3 class="modal-title" id="profileModalTitle">Add Profile</h3>
+        <button class="modal-tool-btn modal-close-btn" id="profileEditCloseBtn" title="Close">&times;</button>
+      </div>
+      <div class="profile-edit-body">
+        <div class="profile-edit-avatar-section">
+          <div class="avatar-badge avatar-xl avatar-red" id="profileEditSelectedAvatar"></div>
+          <div class="avatar-picker-wrap">
+            <span class="avatar-picker-label">Choose an Avatar:</span>
+            <div class="avatar-palette" id="avatarPalette"></div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="profileNameInput">Profile Name</label>
+          <input type="text" id="profileNameInput" placeholder="Name (e.g. Alex, Sarah, Kids)" maxlength="20" required>
+        </div>
+
+        <div class="form-checkbox-group">
+          <label class="checkbox-container">
+            <input type="checkbox" id="profileIsKids">
+            <span class="checkbox-checkmark"></span>
+            <div class="checkbox-label-text">
+              <strong>Kids Profile?</strong>
+              <span>Shows only animation, cartoons, and family-friendly movies.</span>
+            </div>
+          </label>
+        </div>
+
+        <div class="profile-edit-actions">
+          <button class="btn btn-primary" id="saveProfileBtn">Save Profile</button>
+          <button class="btn btn-secondary" id="cancelProfileBtn">Cancel</button>
+          <button class="btn btn-secondary text-danger" id="deleteProfileBtn" style="display: none;">Delete Profile</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================================================================
+       8. EXPLORE BROCHURE MODAL (CINEMATIC FIELD GUIDE)
+       ====================================================================== -->
+  <div class="modal-overlay" id="brochureModal" aria-hidden="true">
+    <div class="brochure-dialog">
+      <div class="brochure-header">
+        <div class="brochure-badge-wrap">
+          <span class="brochure-tag">LIMITED ARCHIVE EDITION</span>
+          <span class="brochure-vol">VOL. 01 / 2026</span>
+        </div>
+        <button class="modal-tool-btn modal-close-btn" id="brochureCloseBtn" title="Close Brochure">&times;</button>
+      </div>
+
+      <div class="brochure-body">
+        <div class="brochure-hero">
+          <div class="brochure-stamp">CERTIFIED CINEMA</div>
+          <h2 class="brochure-title">AURORA <span>FIELD GUIDE</span></h2>
+          <p class="brochure-subtitle">Step behind the curtain into the next evolution of curated motion pictures.</p>
+        </div>
+
+        <div class="brochure-grid">
+          <!-- Pillar 1 -->
+          <div class="brochure-card">
+            <div class="brochure-card-icon">
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18 4l2 4h-3l-2-4h-2l2 4h-3l-2-4H8l2 4H7L5 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4h-4z"/></svg>
+            </div>
+            <h3 class="brochure-card-title">1. Curated Masterworks</h3>
+            <p class="brochure-card-desc">Over 1,000,000+ films, television series, and animated features synced directly with The Movie Database. Filter by classic noir, popular blockbusters, or award-winners with live ratings and cast rosters.</p>
+          </div>
+
+          <!-- Pillar 2 -->
+          <div class="brochure-card">
+            <div class="brochure-card-icon">
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg>
+            </div>
+            <h3 class="brochure-card-title">2. Six Multi-Server Aggregators</h3>
+            <p class="brochure-card-desc">Powered by VidSrc (Fast), Embed.su, SuperEmbed, 2Embed, VidLink, and AutoEmbed. Instant switchable fallback guarantees you never hit a broken stream or dead link.</p>
+          </div>
+
+          <!-- Pillar 3 -->
+          <div class="brochure-card">
+            <div class="brochure-card-icon">
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+            </div>
+            <h3 class="brochure-card-title">3. Multi-User Netflix Profiles</h3>
+            <p class="brochure-card-desc">Individual profile spaces for each viewer in your home. Choose custom neon avatars, maintain private Watchlists, and save your Continue Watching timestamp automatically.</p>
+          </div>
+
+          <!-- Pillar 4 -->
+          <div class="brochure-card">
+            <div class="brochure-card-icon">
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/></svg>
+            </div>
+            <h3 class="brochure-card-title">4. Zero-Friction Native Tech</h3>
+            <p class="brochure-card-desc">Zero external dependencies. Runs directly on native Node.js with built-in instant port switching, password scrypt hashing, and zero ad redirects. Pure cinematic immersion.</p>
+          </div>
+        </div>
+
+        <div class="brochure-specs-ribbon">
+          <div class="spec-item"><span class="spec-k">RESOLUTION:</span> <span class="spec-v">4K UHD / 1080p</span></div>
+          <div class="spec-item"><span class="spec-k">FRAME CADENCE:</span> <span class="spec-v">24.000 FPS</span></div>
+          <div class="spec-item"><span class="spec-k">AUDIO:</span> <span class="spec-v">Dolby Multi-Stream</span></div>
+          <div class="spec-item"><span class="spec-k">PLATFORM:</span> <span class="spec-v">Aurora Native V3</span></div>
+        </div>
+
+        <div class="brochure-actions">
+          <button class="btn btn-primary brochure-enter-cta" id="brochureEnterBtn">
+            <span>Enter Aurora Cinema</span>
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+          </button>
+          <button class="btn btn-secondary" id="brochureSignInBtn">Sign In / Register</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================================================================
+       9. AUTH MODAL (STANDALONE SIGN IN / REGISTER)
+       ====================================================================== -->
+  <div class="modal-overlay" id="authModal" aria-hidden="true">
+    <div class="auth-dialog">
+      <div class="auth-header">
+        <div class="auth-brand-tag">
+          <span class="serif-brand">AURORA</span>
+          <span class="brand-badge">VIP</span>
+        </div>
+        <button class="modal-tool-btn modal-close-btn" id="authCloseBtn" title="Close">&times;</button>
+      </div>
+
+      <div class="auth-body">
+        <div class="auth-intro-heading">
+          <h2 class="auth-title">Welcome to <span>Aurora Cinema</span></h2>
+          <p class="auth-subtitle">Sign in or register to set up your personalized cinema profiles, sync watchlists, and enjoy uninterrupted 4K entertainment.</p>
+        </div>
+
+        <div class="auth-tabs">
+          <button class="auth-tab active" id="tabSignIn">Sign In</button>
+          <button class="auth-tab" id="tabSignUp">Create Account</button>
+        </div>
+
+        <div class="auth-error-msg" id="authErrorMsg" style="display: none;"></div>
+
+        <form id="authForm">
+          <div class="form-group" id="usernameGroup" style="display: none;">
+            <label for="authUsername">Username</label>
+            <input type="text" id="authUsername" placeholder="Choose a username" autocomplete="username">
+          </div>
+
+          <div class="form-group">
+            <label for="authEmail" id="authEmailLabel">Email or Username</label>
+            <input type="text" id="authEmail" placeholder="Enter your email or username" required autocomplete="email">
+          </div>
+
+          <div class="form-group">
+            <label for="authPassword">Password</label>
+            <input type="password" id="authPassword" placeholder="Your secret password" required autocomplete="current-password">
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-block" id="authSubmitBtn">Sign In</button>
+        </form>
+
+        <div class="auth-footer-prompt">
+          <span id="authToggleHint">New to Aurora?</span>
+          <button type="button" class="auth-link" id="authSwitchLink">Create an account</button>
+        </div>
+
+        <div class="auth-guest-option">
+          <button type="button" class="guest-quick-link" id="guestBrowseBtn">Browse Catalog as Guest &rarr;</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================================================================
+       10. ACCOUNT HUB & SECURITY MODAL
+       ====================================================================== -->
+  <div class="modal-overlay" id="accountHubModal" aria-hidden="true">
+    <div class="account-hub-dialog">
+      <div class="modal-header">
+        <div class="modal-title-wrap">
+          <h3 class="modal-title">Account &amp; Security</h3>
+          <span class="modal-meta-tag" style="background: rgba(229,9,20,0.2); color: #E50914;">VIP Access</span>
+        </div>
+        <button class="modal-tool-btn modal-close-btn" id="accountHubCloseBtn" title="Close">&times;</button>
+      </div>
+
+      <div class="account-hub-body">
+        <div class="hub-user-summary">
+          <div class="hub-user-main">
+            <div class="hub-user-name" id="hubUsername">Alex Morgan</div>
+            <div class="hub-user-email" id="hubEmail">alex@aurora.cinema</div>
+          </div>
+          <span class="hub-vip-badge">&#128081; Active Member</span>
+        </div>
+
+        <div class="hub-section-header">
+          <h4>Managed Profiles</h4>
+          <button class="btn btn-secondary btn-sm" id="hubAddProfileBtn">+ Add Profile</button>
+        </div>
+
+        <div class="hub-profiles-list" id="hubProfilesList"></div>
+
+        <div class="account-hub-actions">
+          <button class="btn btn-secondary btn-sm" id="hubSwitchWhoBtn">Switch Profile</button>
+          <button class="btn btn-secondary btn-sm text-danger" id="hubSignOutBtn">Sign Out</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+
+  <!-- Global Toast Notification -->
+  <div class="toast" id="toast"></div>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-container">
+      <div class="footer-brand">
+        <span class="serif-brand">AURORA</span>
+        <span class="brand-badge">NOIR</span>
+        <p class="footer-desc">Curated cinema and modern streaming. Powered by TMDB &amp; high-speed multi-server embeds.</p>
+      </div>
+      <div class="footer-notice">
+        <p><strong>Disclaimer:</strong> Aurora does not host, store, or upload any video files on its servers. All media streams are embedded and provided by non-affiliated third-party platforms. Metadata is provided by TMDB.</p>
+        <p class="copyright">&copy; 2026 Aurora Cinema. Inspired by classic noir and modern streaming.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="app.js?v=4.0"></script>
+</body>
+</html>
