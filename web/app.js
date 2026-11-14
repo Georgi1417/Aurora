@@ -588,6 +588,9 @@
     state.activeTab = 'profile';
     setActiveNavLink('profile');
 
+    if (el.mobileDrawer) el.mobileDrawer.classList.remove('open');
+    if (el.mobileMenuBtn) el.mobileMenuBtn.classList.remove('open');
+
     if (el.catalogView) el.catalogView.style.display = 'none';
     if (el.profileViewScreen) el.profileViewScreen.style.display = 'flex';
     document.body.classList.add('no-hero-view');
@@ -1923,6 +1926,9 @@
   }
 
   function handleNavClick(tab) {
+    if (el.mobileDrawer) el.mobileDrawer.classList.remove('open');
+    if (el.mobileMenuBtn) el.mobileMenuBtn.classList.remove('open');
+
     if (tab === 'profile') {
       showProfileView();
       return;
@@ -1938,8 +1944,6 @@
     });
 
     setActiveNavLink(tab);
-    el.mobileDrawer.classList.remove('open');
-    el.mobileMenuBtn.classList.remove('open');
     loadCatalog(1);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
