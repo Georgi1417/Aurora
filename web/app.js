@@ -559,6 +559,30 @@
     }
   }
 
+  // Helper to toggle hero banner & adjust catalog layout / navbar clearance
+  function updateHeroVisibility(showHero) {
+    if (el.heroBanner) {
+      el.heroBanner.style.display = showHero ? 'flex' : 'none';
+    }
+    if (el.catalogView) {
+      el.catalogView.classList.toggle('has-hero', showHero);
+      el.catalogView.classList.toggle('no-hero', !showHero);
+    }
+    document.body.classList.toggle('no-hero-view', !showHero);
+    updateNavbarBackground();
+  }
+
+  function updateNavbarBackground() {
+    if (!el.navbar) return;
+    const isHeroVisible = el.heroBanner && el.heroBanner.style.display !== 'none' && state.activeTab === 'trending';
+    const isScrolled = window.scrollY > 25;
+    if (!isHeroVisible || isScrolled) {
+      el.navbar.classList.add('scrolled');
+    } else {
+      el.navbar.classList.remove('scrolled');
+    }
+  }
+
   // --- Profile View Screen Controls (Image 3 Reference) ---
   function showProfileView() {
     state.activeTab = 'profile';
@@ -566,6 +590,8 @@
 
     if (el.catalogView) el.catalogView.style.display = 'none';
     if (el.profileViewScreen) el.profileViewScreen.style.display = 'flex';
+    document.body.classList.add('no-hero-view');
+    updateNavbarBackground();
     window.scrollTo({ top: 0, behavior: 'smooth' });
 
     // Populate data
@@ -580,6 +606,7 @@
   function hideProfileView() {
     if (el.profileViewScreen) el.profileViewScreen.style.display = 'none';
     if (el.catalogView) el.catalogView.style.display = 'block';
+    updateHeroVisibility(state.activeTab === 'trending');
   }
 
   // --- Profile Switching & "Who's Watching?" ---
@@ -1214,31 +1241,31 @@
       endpoint = `/api/trending?page=${page}`;
       el.sectionTitle.textContent = 'Trending Today';
       el.sectionSubtitle.textContent = 'Top daily movies and TV shows worldwide';
-      el.heroBanner.style.display = 'flex';
+      updateHeroVisibility(true);
       renderContinueWatching();
     } else if (state.activeTab === 'movies') {
       endpoint = `/api/movies?page=${page}`;
       el.sectionTitle.textContent = 'Popular Movies';
       el.sectionSubtitle.textContent = 'Latest blockbuster feature films';
-      el.heroBanner.style.display = 'none';
+      updateHeroVisibility(false);
       if (el.continueWatchingSection) el.continueWatchingSection.style.display = 'none';
     } else if (state.activeTab === 'tv') {
       endpoint = `/api/tv?page=${page}`;
       el.sectionTitle.textContent = 'Popular TV Series';
       el.sectionSubtitle.textContent = 'Binge-worthy drama, action, and episodic series';
-      el.heroBanner.style.display = 'none';
+      updateHeroVisibility(false);
       if (el.continueWatchingSection) el.continueWatchingSection.style.display = 'none';
     } else if (state.activeTab === 'cartoons') {
       endpoint = `/api/cartoons?page=${page}`;
       el.sectionTitle.textContent = 'Animation & Cartoons';
       el.sectionSubtitle.textContent = 'Best animated movies, anime, and family entertainment';
-      el.heroBanner.style.display = 'none';
+      updateHeroVisibility(false);
       if (el.continueWatchingSection) el.continueWatchingSection.style.display = 'none';
     } else if (state.activeTab === 'search') {
       endpoint = `/api/search?q=${encodeURIComponent(state.searchQuery)}&page=${page}`;
       el.sectionTitle.textContent = `Search: "${state.searchQuery}"`;
       el.sectionSubtitle.textContent = 'Matching movies and TV shows';
-      el.heroBanner.style.display = 'none';
+      updateHeroVisibility(false);
       if (el.continueWatchingSection) el.continueWatchingSection.style.display = 'none';
     } else if (state.activeTab === 'watchlist') {
       renderWatchlist();
@@ -1454,7 +1481,7 @@
 
   function renderWatchlist() {
     el.loadingState.style.display = 'none';
-    el.heroBanner.style.display = 'none';
+    updateHeroVisibility(false);
     if (el.continueWatchingSection) el.continueWatchingSection.style.display = 'none';
 
     const profileName = state.activeProfile ? `${state.activeProfile.name}'s ` : '';
@@ -2292,13 +2319,8 @@
     });
 
     // Sticky Navbar
-    window.addEventListener('scroll', () => {
-      if (window.scrollY > 40) {
-        el.navbar.classList.add('scrolled');
-      } else {
-        el.navbar.classList.remove('scrolled');
-      }
-    }, { passive: true });
+    window.addEventListener('scroll', updateNavbarBackground, { passive: true });
+    updateNavbarBackground();
   }
 
   // --- Initial Launch ---
