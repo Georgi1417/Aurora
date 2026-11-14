@@ -1939,6 +1939,7 @@
 
     setActiveNavLink(tab);
     el.mobileDrawer.classList.remove('open');
+    el.mobileMenuBtn.classList.remove('open');
     loadCatalog(1);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
@@ -1971,8 +1972,10 @@
     });
 
     // Mobile Drawer
-    el.mobileMenuBtn.addEventListener('click', () => {
-      el.mobileDrawer.classList.toggle('open');
+    el.mobileMenuBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isOpen = el.mobileDrawer.classList.toggle('open');
+      el.mobileMenuBtn.classList.toggle('open', isOpen);
     });
 
     // Search Controls
@@ -1999,6 +2002,10 @@
       }
       if (!e.target.closest('.user-profile-menu')) {
         closeDropdown();
+      }
+      if (!e.target.closest('#mobileDrawer') && !e.target.closest('#mobileMenuBtn')) {
+        el.mobileDrawer.classList.remove('open');
+        el.mobileMenuBtn.classList.remove('open');
       }
     });
 

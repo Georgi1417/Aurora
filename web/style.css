@@ -326,8 +326,12 @@ body.no-hero-view .navbar,
   display: none;
   flex-direction: column;
   justify-content: space-around;
-  width: 26px;
-  height: 20px;
+  width: 32px;
+  height: 32px;
+  padding: 5px 3px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
 }
 
 .mobile-menu-btn span {
@@ -335,7 +339,20 @@ body.no-hero-view .navbar,
   height: 2px;
   background-color: var(--text-primary);
   border-radius: 2px;
-  transition: transform var(--transition-fast);
+  transition: all var(--transition-fast);
+}
+
+.mobile-menu-btn.open span:nth-child(1) {
+  transform: translateY(7px) rotate(45deg);
+}
+
+.mobile-menu-btn.open span:nth-child(2) {
+  opacity: 0;
+  transform: scaleX(0);
+}
+
+.mobile-menu-btn.open span:nth-child(3) {
+  transform: translateY(-7px) rotate(-45deg);
 }
 
 .mobile-drawer {
@@ -1422,34 +1439,256 @@ body.no-hero-view .main-content {
 }
 
 @media (max-width: 768px) {
-  .catalog-view.no-hero .main-content,
-  .catalog-view:has(#heroBanner[style*="display: none"]) .main-content,
-  body.no-hero-view .main-content {
-    padding-top: 96px;
-    padding-left: 16px;
-    padding-right: 16px;
+  /* Navbar & Header on Mobile */
+  .navbar {
+    height: 64px;
+  }
+
+  .nav-container {
+    padding: 0 14px;
+    gap: 10px;
+  }
+
+  .nav-left {
+    gap: 10px;
+  }
+
+  .brand-logo {
+    font-size: 1.35rem;
+    letter-spacing: 1.5px;
+    flex-shrink: 0;
   }
 
   .nav-links {
     display: none;
   }
 
-  .mobile-menu-btn {
-    display: flex;
+  .nav-right {
+    gap: 8px;
+    flex: 1;
+    justify-content: flex-end;
+    min-width: 0;
   }
 
   .search-box {
-    width: 170px;
+    width: auto;
+    flex: 1;
+    max-width: 160px;
+    min-width: 85px;
+    padding: 5px 10px;
   }
 
   .search-box:focus-within {
-    width: 220px;
+    width: auto;
+    max-width: 220px;
+  }
+
+  .search-box input {
+    font-size: 0.82rem;
+  }
+
+  .btn-signin {
+    white-space: nowrap !important;
+    flex-shrink: 0;
+    padding: 6px 14px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    height: 34px;
+    border-radius: var(--radius-full);
+  }
+
+  .profile-pill-name {
+    display: none;
+  }
+
+  .profile-pill-btn {
+    padding: 3px 6px;
+    gap: 4px;
+  }
+
+  .mobile-menu-btn {
+    display: flex;
+    flex-shrink: 0;
+    margin-left: 2px;
+  }
+
+  .mobile-drawer {
+    top: 64px;
+    padding: 12px 16px 20px;
+    max-height: calc(100vh - 64px);
+  }
+
+  .mobile-nav-link {
+    padding: 13px 12px;
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: var(--radius-sm);
+  }
+
+  .mobile-nav-link.active {
+    background: rgba(229, 9, 20, 0.14);
+    border-left: 3px solid var(--accent-red);
+    padding-left: 14px;
+  }
+
+  /* Hero Featured Banner on Mobile */
+  .hero-banner {
+    padding: 85px 16px 36px;
+    min-height: auto;
+  }
+
+  .hero-content {
+    max-width: 100%;
+  }
+
+  .hero-badge {
+    font-size: 0.65rem;
+    padding: 3px 8px;
+    margin-bottom: 8px;
+  }
+
+  .hero-title {
+    font-size: 1.95rem;
+    line-height: 1.15;
+    margin-bottom: 8px;
+    letter-spacing: -0.025em;
+  }
+
+  .hero-meta {
+    font-size: 0.78rem;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-bottom: 8px;
+  }
+
+  .hero-genres {
+    font-size: 0.8rem;
+    margin-bottom: 10px;
+  }
+
+  .hero-overview {
+    font-size: 0.88rem;
+    line-height: 1.45;
+    margin-bottom: 18px;
+    -webkit-line-clamp: 3;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .hero-actions {
+    display: flex;
+    gap: 10px;
+    width: 100%;
+  }
+
+  .hero-actions .btn {
+    flex: 1;
+    justify-content: center;
+    padding: 12px 14px;
+    font-size: 0.9rem;
+    font-weight: 700;
+    border-radius: var(--radius-full);
   }
 
   .hero-dots {
     display: none;
   }
 
+  /* Catalog & Main Content */
+  .main-content {
+    padding: 24px 14px 60px;
+  }
+
+  .catalog-view.no-hero .main-content,
+  .catalog-view:has(#heroBanner[style*="display: none"]) .main-content,
+  body.no-hero-view .main-content {
+    padding-top: 84px;
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+
+  .section-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .section-title {
+    font-size: 1.5rem;
+    letter-spacing: -0.02em;
+  }
+
+  .section-subtitle {
+    font-size: 0.82rem;
+  }
+
+  .filter-pills {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    width: 100%;
+    padding-bottom: 6px;
+    scrollbar-width: none;
+    gap: 8px;
+  }
+
+  .filter-pills::-webkit-scrollbar {
+    display: none;
+  }
+
+  .filter-pill {
+    flex-shrink: 0;
+    white-space: nowrap;
+    padding: 6px 14px;
+    font-size: 0.8rem;
+  }
+
+  .media-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  .media-card {
+    border-radius: 8px;
+  }
+
+  .card-info {
+    padding: 8px 10px;
+  }
+
+  .card-title {
+    font-size: 0.85rem;
+    font-weight: 700;
+  }
+
+  .card-meta {
+    font-size: 0.72rem;
+  }
+
+  /* Horizontal Scrollable Continue Watching */
+  .continue-watching-grid {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    gap: 12px;
+    padding-bottom: 6px;
+  }
+
+  .continue-watching-grid::-webkit-scrollbar {
+    display: none;
+  }
+
+  .continue-card {
+    width: 170px;
+    flex-shrink: 0;
+  }
+
+  /* Full Screen Mobile Modals */
   .modal-dialog {
     max-height: 100vh;
     border-radius: 0;
@@ -1458,6 +1697,72 @@ body.no-hero-view .main-content {
 
   .modal-overlay {
     padding: 0;
+  }
+
+  .modal-header {
+    padding: 12px 16px;
+  }
+
+  .modal-title {
+    font-size: 1.05rem;
+    max-width: 200px;
+  }
+
+  .media-details-area {
+    padding: 16px;
+    gap: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .nav-container {
+    padding: 0 12px;
+  }
+
+  .brand-logo {
+    font-size: 1.22rem;
+    letter-spacing: 1px;
+  }
+
+  .search-box {
+    max-width: 125px;
+    min-width: 80px;
+    padding: 4px 8px;
+  }
+
+  .search-icon {
+    width: 14px;
+    height: 14px;
+    margin-right: 4px;
+  }
+
+  .btn-signin {
+    padding: 5px 12px;
+    font-size: 0.78rem;
+    height: 32px;
+  }
+
+  .hero-title {
+    font-size: 1.7rem;
+  }
+
+  .hero-actions .btn {
+    padding: 10px 12px;
+    font-size: 0.82rem;
+  }
+
+  .search-box:focus-within {
+    position: absolute;
+    top: 8px;
+    left: 10px;
+    right: 10px;
+    max-width: none;
+    width: auto;
+    z-index: 120;
+    background: rgba(18, 18, 22, 0.98);
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.95);
+    border-color: var(--accent-red);
+    height: 44px;
   }
 }
 
