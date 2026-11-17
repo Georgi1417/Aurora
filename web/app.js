@@ -135,8 +135,24 @@
     isManageProfilesMode: false,
     editingProfileId: null,
     selectedAvatarForEdit: 'avatar-red',
-    authMode: 'login' // 'login' or 'register'
+    authMode: 'login', // 'login' or 'register'
+    isTrustedAction: false
   };
+
+  // Anti-Popup Ad Shield Interceptor (Protects top window without requiring iframe sandbox)
+  try {
+    const _nativeWindowOpen = window.open;
+    window.open = function(url, target, features) {
+      if (state.player && state.player.isAdShieldActive && target !== '_self') {
+        if (state.isTrustedAction) {
+          return _nativeWindowOpen.call(window, url, target, features);
+        }
+        console.warn('🛡️ [Ad Shield] Blocked unprompted popup tab:', url);
+        return null;
+      }
+      return _nativeWindowOpen.call(window, url, target, features);
+    };
+  } catch (_) {}
 
   // --- DOM Elements ---
   const el = {
@@ -2134,14 +2150,13 @@
 
     el.playerLoader.classList.remove('hidden');
     el.modalExternalBtn.onclick = () => {
+      state.isTrustedAction = true;
       window.open(server.url, '_blank', 'noopener,noreferrer');
+      state.isTrustedAction = false;
     };
 
-    if (state.player.isAdShieldActive) {
-      el.videoIframe.setAttribute('sandbox', 'allow-forms allow-scripts allow-same-origin allow-presentation');
-    } else {
-      el.videoIframe.removeAttribute('sandbox');
-    }
+    // Ensure sandbox is never present so video stream providers play without "Please Disable Sandbox"
+    el.videoIframe.removeAttribute('sandbox');
 
     el.videoIframe.src = server.url;
     el.videoIframe.onload = () => {
@@ -2155,18 +2170,12 @@
     if (state.player.isAdShieldActive) {
       el.modalAdShieldBtn.className = 'ad-shield-pill active';
       el.modalAdShieldBtn.innerHTML = '<span class="shield-dot"></span><span>Ad Shield: ON</span>';
-      el.modalAdShieldBtn.title = 'Anti-Popup Ad Shield: ON (Blocks mobile popups & screen click ads)';
-      if (el.videoIframe) {
-        el.videoIframe.setAttribute('sandbox', 'allow-forms allow-scripts allow-same-origin allow-presentation');
-      }
-      showToast('🛡️ Ad Shield ON: Screen-click popups blocked');
+      el.modalAdShieldBtn.title = 'Anti-Popup Ad Shield: ON (Blocks popups & screen-click tabs)';
+      showToast('🛡️ Ad Shield ON: Popups blocked');
     } else {
       el.modalAdShieldBtn.className = 'ad-shield-pill shield-off';
       el.modalAdShieldBtn.innerHTML = '<span class="shield-dot"></span><span>Ad Shield: OFF</span>';
       el.modalAdShieldBtn.title = 'Ad Shield: OFF (Popups allowed - click to re-enable)';
-      if (el.videoIframe) {
-        el.videoIframe.removeAttribute('sandbox');
-      }
       showToast('⚠️ Ad Shield OFF: Popups unblocked');
     }
   }
