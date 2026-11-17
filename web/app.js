@@ -2610,11 +2610,11 @@
     // Starter Welcome Screen Controls (Image 2 Reference)
     if (el.starterEnterBtn) {
       el.starterEnterBtn.addEventListener('click', () => {
-        hideStarterScreen();
-        if (state.currentUser && !state.activeProfile) {
-          openProfilesScreen();
-        } else if (!state.currentUser) {
-          showToast('Welcome to Aurora Cinema! Enjoy high quality streaming.');
+        if (state.currentUser) {
+          hideStarterScreen();
+          if (!state.activeProfile) openProfilesScreen();
+        } else {
+          openStarterAuth('register');
         }
       });
     }
@@ -2673,11 +2673,12 @@
     if (el.brochureEnterBtn) {
       el.brochureEnterBtn.addEventListener('click', () => {
         closeBrochureModal();
-        hideStarterScreen();
-        if (state.currentUser && !state.activeProfile) {
-          openProfilesScreen();
+        if (state.currentUser) {
+          hideStarterScreen();
+          if (!state.activeProfile) openProfilesScreen();
         } else {
-          showToast('Welcome to Aurora Cinema!');
+          openStarterAuth('register');
+          showToast('🔒 Please create a free account to enter and watch.');
         }
       });
     }
