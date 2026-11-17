@@ -377,10 +377,20 @@
   let toastTimer = null;
   function showToast(message) {
     if (toastTimer) clearTimeout(toastTimer);
+    if (!el.toast) {
+      el.toast = document.getElementById('toast');
+      if (!el.toast) {
+        const t = document.createElement('div');
+        t.id = 'toast';
+        t.className = 'toast';
+        document.body.appendChild(t);
+        el.toast = t;
+      }
+    }
     el.toast.textContent = message;
     el.toast.classList.add('show');
     toastTimer = setTimeout(() => {
-      el.toast.classList.remove('show');
+      el.toast?.classList.remove('show');
     }, 3200);
   }
 
@@ -505,16 +515,11 @@
   }
 
   function openStarterAuth(mode = 'login') {
-    state.authMode = mode;
-    setStarterAuthMode(mode);
-    if (el.starterAuthError) el.starterAuthError.style.display = 'none';
-    if (el.starterAuthPanel) el.starterAuthPanel.style.display = 'block';
-    setTimeout(() => {
-      (mode === 'register' ? el.starterUsernameInput : el.starterEmailInput)?.focus();
-    }, 100);
+    openAuthModal(mode);
   }
 
   function closeStarterAuth() {
+    closeAuthModal();
     if (el.starterAuthPanel) el.starterAuthPanel.style.display = 'none';
   }
 
@@ -733,6 +738,7 @@
       openAuthModal('login');
       return;
     }
+    hideStarterScreen();
     state.isManageProfilesMode = false;
     el.profilesScreen.classList.remove('manage-mode');
     el.profilesHeading.textContent = "Who's watching?";
@@ -1404,6 +1410,7 @@
         state.currentUser = data.user;
         setActiveProfile(data.activeProfile);
 
+        hideStarterScreen();
         closeAuthModal();
         showToast(`Welcome to Aurora, ${data.user.username}!`);
         openProfilesScreen();
@@ -1421,6 +1428,7 @@
         state.currentUser = data.user;
         setActiveProfile(data.activeProfile);
 
+        hideStarterScreen();
         closeAuthModal();
         showToast(`Signed in as ${data.user.username}`);
         openProfilesScreen();
@@ -1630,7 +1638,7 @@
     });
 
     el.heroWatchBtn.onclick = () => openPlayerModal(item);
-    el.heroDetailsBtn.onclick = () => openPlayerModal(item);
+    if (el.heroDetailsBtn) el.heroDetailsBtn.onclick = () => openPlayerModal(item);
   }
 
   function restartHeroTimer() {
@@ -2517,10 +2525,12 @@
       openAuthModal('login');
     });
 
-    el.profilesBrowseGuestBtn.addEventListener('click', () => {
-      closeProfilesScreen();
-      showToast('Browsing Aurora as Guest');
-    });
+    if (el.profilesBrowseGuestBtn) {
+      el.profilesBrowseGuestBtn.addEventListener('click', () => {
+        closeProfilesScreen();
+        showToast('Browsing Aurora as Guest');
+      });
+    }
 
     // Account Hub Modal Controls
     el.accountHubCloseBtn.addEventListener('click', closeAccountHubModal);
@@ -2549,10 +2559,12 @@
       });
     }
 
-    el.guestBrowseBtn.addEventListener('click', () => {
-      closeAuthModal();
-      showToast('Welcome! Browsing Aurora as Guest');
-    });
+    if (el.guestBrowseBtn) {
+      el.guestBrowseBtn.addEventListener('click', () => {
+        closeAuthModal();
+        showToast('Welcome! Browsing Aurora as Guest');
+      });
+    }
 
     el.authCloseBtn.addEventListener('click', closeAuthModal);
     el.authModal.addEventListener('click', (e) => {
@@ -2609,25 +2621,33 @@
 
     // Starter Welcome Screen Controls (Image 2 Reference)
     if (el.starterEnterBtn) {
-      el.starterEnterBtn.addEventListener('click', () => {
+      el.starterEnterBtn.addEventListener('click', (e) => {
+        if (e) e.preventDefault();
         if (state.currentUser) {
           hideStarterScreen();
           if (!state.activeProfile) openProfilesScreen();
         } else {
-          openStarterAuth('register');
+          openAuthModal('register');
         }
       });
     }
 
     if (el.starterExploreBtn) {
-      el.starterExploreBtn.addEventListener('click', () => {
+      el.starterExploreBtn.addEventListener('click', (e) => {
+        if (e) e.preventDefault();
         openBrochureModal();
       });
     }
 
     if (el.starterSignInBtn) {
-      el.starterSignInBtn.addEventListener('click', () => {
-        openStarterAuth('login');
+      el.starterSignInBtn.addEventListener('click', (e) => {
+        if (e) e.preventDefault();
+        if (state.currentUser) {
+          hideStarterScreen();
+          if (!state.activeProfile) openProfilesScreen();
+        } else {
+          openAuthModal('login');
+        }
       });
     }
 
