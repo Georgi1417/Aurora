@@ -122,7 +122,8 @@
       season: 1,
       episode: 1,
       serverIndex: 0,
-      streamSources: []
+      streamSources: [],
+      isAdShieldActive: true
     },
 
     // Authentication & Netflix Multi-Profiles
@@ -294,6 +295,7 @@
 
     // Player Modal
     playerModal: document.getElementById('playerModal'),
+    modalAdShieldBtn: document.getElementById('modalAdShieldBtn'),
     modalCloseBtn: document.getElementById('modalCloseBtn'),
     modalExternalBtn: document.getElementById('modalExternalBtn'),
     modalMediaTitle: document.getElementById('modalMediaTitle'),
@@ -316,6 +318,35 @@
     modalWatchlistBtn: document.getElementById('modalWatchlistBtn'),
     modalWatchlistText: document.getElementById('modalWatchlistText'),
 
+    // VIP & Admin Elements
+    navAdminBtn: document.getElementById('navAdminBtn'),
+    menuAdminBtn: document.getElementById('menuAdminBtn'),
+    mobileAdminBtn: document.getElementById('mobileAdminBtn'),
+    profileMenuAdmin: document.getElementById('profileMenuAdmin'),
+    profileMenuSubscription: document.getElementById('profileMenuSubscription'),
+    profileVipStatusText: document.getElementById('profileVipStatusText'),
+    hubVipBadge: document.querySelector('.hub-vip-badge'),
+    vipModal: document.getElementById('vipModal'),
+    vipCloseBtn: document.getElementById('vipCloseBtn'),
+    vipStripeCheckoutBtn: document.getElementById('vipStripeCheckoutBtn'),
+    adminModal: document.getElementById('adminModal'),
+    adminCloseBtn: document.getElementById('adminCloseBtn'),
+    adminTabAnalyticsBtn: document.getElementById('adminTabAnalyticsBtn'),
+    adminTabUsersBtn: document.getElementById('adminTabUsersBtn'),
+    adminTabAnalytics: document.getElementById('adminTabAnalytics'),
+    adminTabUsers: document.getElementById('adminTabUsers'),
+    adminTotalVisits: document.getElementById('adminTotalVisits'),
+    adminTodayUniques: document.getElementById('adminTodayUniques'),
+    adminTodayVisits: document.getElementById('adminTodayVisits'),
+    adminTotalVIP: document.getElementById('adminTotalVIP'),
+    adminConversionRate: document.getElementById('adminConversionRate'),
+    adminTotalStreams: document.getElementById('adminTotalStreams'),
+    adminTrafficBars: document.getElementById('adminTrafficBars'),
+    adminRecentStreamsList: document.getElementById('adminRecentStreamsList'),
+    adminUserSearchInput: document.getElementById('adminUserSearchInput'),
+    adminRefreshUsersBtn: document.getElementById('adminRefreshUsersBtn'),
+    adminUsersTableBody: document.getElementById('adminUsersTableBody'),
+
     // Toast
     toast: document.getElementById('toast')
   };
@@ -335,7 +366,9 @@
     const res = await fetch(endpoint, options);
     const data = await res.json().catch(() => ({}));
     if (!res.ok) {
-      throw new Error(data.error || `HTTP ${res.status}`);
+      const error = new Error(data.error || `HTTP ${res.status}`);
+      error.status = res.status;
+      throw error;
     }
     return data;
   }
@@ -395,9 +428,18 @@
       if (el.mobileSignInBtn) el.mobileSignInBtn.style.display = 'none';
       el.navUserProfileMenu.style.display = 'block';
 
+      const isAdmin = state.currentUser.role === 'admin';
+      const isVIP = state.currentUser.isVIP || state.currentUser.plan === 'vip' || isAdmin;
+
       // Update avatar & name
       el.navProfileName.textContent = state.activeProfile.name;
       setAvatarElementClassAndIcon(el.navProfileAvatar, state.activeProfile.avatar);
+
+      // Admin button toggles
+      if (el.navAdminBtn) el.navAdminBtn.style.display = isAdmin ? 'inline-flex' : 'none';
+      if (el.menuAdminBtn) el.menuAdminBtn.style.display = isAdmin ? 'flex' : 'none';
+      if (el.mobileAdminBtn) el.mobileAdminBtn.style.display = isAdmin ? 'block' : 'none';
+      if (el.profileMenuAdmin) el.profileMenuAdmin.style.display = isAdmin ? 'flex' : 'none';
 
       // Dropdown user info
       el.dropdownUserEmail.textContent = `${state.currentUser.email}`;
@@ -425,6 +467,10 @@
       el.navSignInBtn.style.display = 'inline-block';
       if (el.mobileSignInBtn) el.mobileSignInBtn.style.display = 'block';
       el.navUserProfileMenu.style.display = 'none';
+      if (el.navAdminBtn) el.navAdminBtn.style.display = 'none';
+      if (el.menuAdminBtn) el.menuAdminBtn.style.display = 'none';
+      if (el.mobileAdminBtn) el.mobileAdminBtn.style.display = 'none';
+      if (el.profileMenuAdmin) el.profileMenuAdmin.style.display = 'none';
     }
   }
 
@@ -598,12 +644,45 @@
     window.scrollTo({ top: 0, behavior: 'smooth' });
 
     // Populate data
-    const profile = state.activeProfile || (state.currentUser?.profiles?.[0]) || { name: 'Alex Morgan', avatar: 'avatar-red', isKids: false };
-    if (el.profileViewName) el.profileViewName.textContent = profile.name;
-    if (el.profileViewAvatar) setAvatarElementClassAndIcon(el.profileViewAvatar, profile.avatar);
-    if (el.profileBadgeText) el.profileBadgeText.textContent = profile.isKids ? 'Kids Profile' : 'Premium Member';
-    if (el.profileWatchlistBadgeCount) el.profileWatchlistBadgeCount.textContent = (state.profileWatchlist || []).length;
-    if (el.profileSubProfilesCount) el.profileSubProfilesCount.textContent = `${state.currentUser ? (state.currentUser.profiles || []).length : 1} Profiles`;
+    if (state.currentUser && state.activeProfile) {
+      const p = state.activeProfile;
+      const isAdmin = state.currentUser.role === 'admin';
+      const isVIP = state.currentUser.isVIP || state.currentUser.plan === 'vip' || isAdmin;
+
+      if (el.profileViewName) el.profileViewName.textContent = p.name;
+      if (el.profileViewAvatar) setAvatarElementClassAndIcon(el.profileViewAvatar, p.avatar);
+
+      if (el.profileBadgeText) {
+        if (isAdmin) {
+          el.profileBadgeText.textContent = '⚡ Administrator • VIP';
+        } else if (p.isKids) {
+          el.profileBadgeText.textContent = 'Kids Profile';
+        } else if (isVIP) {
+          el.profileBadgeText.textContent = '👑 VIP Member (Ad-Free)';
+        } else {
+          el.profileBadgeText.textContent = 'Free Member';
+        }
+      }
+
+      if (el.profileVipStatusText) {
+        el.profileVipStatusText.textContent = isVIP ? '👑 VIP Active' : 'Upgrade to VIP';
+        el.profileVipStatusText.className = isVIP ? 'menu-sub-info text-warning' : 'menu-sub-info text-success';
+      }
+
+      if (el.profileWatchlistBadgeCount) el.profileWatchlistBadgeCount.textContent = (state.profileWatchlist || []).length;
+      if (el.profileSubProfilesCount) el.profileSubProfilesCount.textContent = `${(state.currentUser.profiles || []).length} Profiles`;
+
+      if (el.profileMenuAdmin) el.profileMenuAdmin.style.display = isAdmin ? 'flex' : 'none';
+    } else {
+      // Guest viewer (clean, no fake Alex Morgan)
+      if (el.profileViewName) el.profileViewName.textContent = 'Guest Explorer';
+      if (el.profileViewAvatar) setAvatarElementClassAndIcon(el.profileViewAvatar, 'avatar-red');
+      if (el.profileBadgeText) el.profileBadgeText.textContent = 'Free Guest Access';
+      if (el.profileWatchlistBadgeCount) el.profileWatchlistBadgeCount.textContent = (state.profileWatchlist || []).length;
+      if (el.profileSubProfilesCount) el.profileSubProfilesCount.textContent = 'Sign in to sync';
+      if (el.profileMenuAdmin) el.profileMenuAdmin.style.display = 'none';
+      if (el.profileVipStatusText) el.profileVipStatusText.textContent = 'Sign in to unlock';
+    }
   }
 
   function hideProfileView() {
@@ -893,6 +972,21 @@
     el.hubUsername.textContent = state.currentUser.username;
     el.hubEmail.textContent = state.currentUser.email;
 
+    const isAdmin = state.currentUser.role === 'admin';
+    const isVIP = state.currentUser.isVIP || state.currentUser.plan === 'vip' || isAdmin;
+    if (el.hubVipBadge) {
+      if (isAdmin) {
+        el.hubVipBadge.textContent = '⚡ Administrator';
+        el.hubVipBadge.style.color = '#f59e0b';
+      } else if (isVIP) {
+        el.hubVipBadge.textContent = '👑 VIP Member';
+        el.hubVipBadge.style.color = '#f59e0b';
+      } else {
+        el.hubVipBadge.textContent = 'Free Account';
+        el.hubVipBadge.style.color = 'var(--text-secondary)';
+      }
+    }
+
     // Render profiles list in hub
     el.hubProfilesList.innerHTML = '';
     const profiles = state.currentUser.profiles || [];
@@ -930,6 +1024,323 @@
 
   function closeAccountHubModal() {
     el.accountHubModal.classList.remove('active');
+  }
+
+  // --- Stripe VIP Modal & Checkout ---
+  function openVipModal() {
+    if (!state.currentUser) {
+      openAuthModal('login');
+      showToast('Please sign in or register before subscribing to VIP');
+      return;
+    }
+    if (el.vipModal) {
+      el.vipModal.classList.add('active');
+      el.vipModal.setAttribute('aria-hidden', 'false');
+    }
+  }
+
+  function closeVipModal() {
+    if (el.vipModal) {
+      el.vipModal.classList.remove('active');
+      el.vipModal.setAttribute('aria-hidden', 'true');
+    }
+  }
+
+  async function handleStripeCheckout() {
+    if (!state.currentUser) {
+      openAuthModal('login');
+      return;
+    }
+
+    try {
+      showToast('Connecting to Stripe secure checkout...');
+      const data = await fetchAPI('/api/stripe/create-checkout-session', {
+        method: 'POST',
+        body: {}
+      });
+
+      if (data.url) {
+        // Real Stripe Checkout redirect
+        window.location.href = data.url;
+      } else if (data.isDemo) {
+        // Demo / test mode when keys are not configured yet
+        showToast('Activating VIP (Test Mode)...');
+        const verifyData = await fetchAPI('/api/stripe/verify-session?demo=true');
+        if (verifyData.success) {
+          state.currentUser = verifyData.user;
+          renderNavUserUI();
+          showProfileView();
+          closeVipModal();
+          showToast('🎉 Welcome to Aurora VIP! 4K Ad-Free streaming is active!');
+        }
+      }
+    } catch (err) {
+      console.error('Stripe Checkout Error:', err);
+      showToast(`Checkout Error: ${err.message}`);
+    }
+  }
+
+  // --- Admin Command Center & Statistics ---
+  let adminUsersCache = [];
+
+  async function openAdminModal() {
+    if (!state.currentUser || state.currentUser.role !== 'admin') {
+      showToast('Unauthorized: Admin access required');
+      return;
+    }
+
+    if (el.adminModal) {
+      el.adminModal.classList.add('active');
+      el.adminModal.setAttribute('aria-hidden', 'false');
+    }
+
+    // Default to analytics tab
+    switchAdminTab('analytics');
+    await loadAdminOverview();
+  }
+
+  function closeAdminModal() {
+    if (el.adminModal) {
+      el.adminModal.classList.remove('active');
+      el.adminModal.setAttribute('aria-hidden', 'true');
+    }
+  }
+
+  function switchAdminTab(tabName) {
+    if (!el.adminTabAnalytics || !el.adminTabUsers) return;
+
+    if (tabName === 'analytics') {
+      el.adminTabAnalytics.style.display = 'block';
+      el.adminTabUsers.style.display = 'none';
+      if (el.adminTabAnalyticsBtn) el.adminTabAnalyticsBtn.classList.add('active');
+      if (el.adminTabUsersBtn) el.adminTabUsersBtn.classList.remove('active');
+      loadAdminOverview();
+    } else {
+      el.adminTabAnalytics.style.display = 'none';
+      el.adminTabUsers.style.display = 'block';
+      if (el.adminTabAnalyticsBtn) el.adminTabAnalyticsBtn.classList.remove('active');
+      if (el.adminTabUsersBtn) el.adminTabUsersBtn.classList.add('active');
+      loadAdminUsers();
+    }
+  }
+
+  async function loadAdminOverview() {
+    try {
+      const data = await fetchAPI('/api/admin/overview');
+      if (!data || !data.stats) return;
+
+      const s = data.stats;
+      if (el.adminTotalVisits) el.adminTotalVisits.textContent = Number(s.totalVisits).toLocaleString();
+      if (el.adminTodayUniques) el.adminTodayUniques.textContent = Number(s.todayUniques).toLocaleString();
+      if (el.adminTodayVisits) el.adminTodayVisits.textContent = `${Number(s.todayVisits).toLocaleString()} page loads today`;
+      if (el.adminTotalVIP) el.adminTotalVIP.textContent = Number(s.totalVIP).toLocaleString();
+      if (el.adminConversionRate) el.adminConversionRate.textContent = `${s.conversionRate} of ${s.totalUsers} users`;
+      if (el.adminTotalStreams) el.adminTotalStreams.textContent = Number(s.totalStreams).toLocaleString();
+
+      // Render 7-day traffic chart
+      renderAdminTrafficChart(data.dailyHistory || {});
+
+      // Render recent streams feed
+      renderAdminStreamsFeed(data.recentStreams || []);
+    } catch (err) {
+      console.warn('Failed to load admin overview:', err.message);
+    }
+  }
+
+  function renderAdminTrafficChart(dailyHistory) {
+    if (!el.adminTrafficBars) return;
+    el.adminTrafficBars.innerHTML = '';
+
+    // Generate last 7 days
+    const days = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const dateStr = d.toISOString().slice(0, 10);
+      const label = d.toLocaleDateString(undefined, { weekday: 'short', month: 'numeric', day: 'numeric' });
+      const stats = dailyHistory[dateStr] || { visits: 0, uniques: [] };
+      const uniqueCount = (stats.uniques || []).length;
+      days.push({ dateStr, label, uniqueCount, visits: stats.visits });
+    }
+
+    const maxCount = Math.max(...days.map(d => d.uniqueCount), 5);
+
+    days.forEach(d => {
+      const col = document.createElement('div');
+      col.className = 'traffic-bar-col';
+      const pct = Math.max(8, Math.round((d.uniqueCount / maxCount) * 100));
+
+      col.innerHTML = `
+        <div class="traffic-bar-fill-wrap" title="${escapeHTML(d.label)}: ${d.uniqueCount} unique visitors (${d.visits} total loads)">
+          <div class="traffic-bar-val">${d.uniqueCount}</div>
+          <div class="traffic-bar-fill" style="height: ${pct}%;"></div>
+        </div>
+        <div class="traffic-bar-date">${escapeHTML(d.label)}</div>
+      `;
+      el.adminTrafficBars.appendChild(col);
+    });
+  }
+
+  function renderAdminStreamsFeed(streams) {
+    if (!el.adminRecentStreamsList) return;
+    el.adminRecentStreamsList.innerHTML = '';
+
+    if (!streams.length) {
+      el.adminRecentStreamsList.innerHTML = '<div style="color: var(--text-muted); padding: 12px; font-size: 0.85rem;">No stream activity recorded yet today.</div>';
+      return;
+    }
+
+    streams.forEach(s => {
+      const row = document.createElement('div');
+      row.className = `admin-stream-row ${s.isVip ? 'is-vip' : ''}`;
+      const timeStr = new Date(s.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+      row.innerHTML = `
+        <div class="admin-stream-left">
+          <span class="admin-stream-type">${escapeHTML(s.type || 'Movie')}</span>
+          <span class="admin-stream-title">${escapeHTML(s.title || 'Video Stream')}</span>
+          ${s.isVip ? '<span class="badge-plan-vip">VIP 4K</span>' : ''}
+        </div>
+        <div class="admin-stream-time">${timeStr}</div>
+      `;
+      el.adminRecentStreamsList.appendChild(row);
+    });
+  }
+
+  async function loadAdminUsers() {
+    try {
+      const data = await fetchAPI('/api/admin/users');
+      adminUsersCache = data.users || [];
+      renderAdminUsersTable();
+    } catch (err) {
+      console.warn('Failed to load admin users:', err.message);
+    }
+  }
+
+  function renderAdminUsersTable(filter = '') {
+    if (!el.adminUsersTableBody) return;
+    el.adminUsersTableBody.innerHTML = '';
+
+    const q = (filter || '').trim().toLowerCase();
+    const filtered = adminUsersCache.filter(u => {
+      if (!q) return true;
+      return (u.username || '').toLowerCase().includes(q) || (u.email || '').toLowerCase().includes(q) || (u.id || '').includes(q);
+    });
+
+    if (!filtered.length) {
+      el.adminUsersTableBody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 24px;">No user accounts match your search.</td></tr>`;
+      return;
+    }
+
+    filtered.forEach(u => {
+      const tr = document.createElement('tr');
+      const isVIP = u.plan === 'vip' || u.isVIP;
+      const isAdmin = u.role === 'admin';
+
+      tr.innerHTML = `
+        <td>
+          <div class="user-cell">
+            <div class="user-cell-avatar">${escapeHTML((u.username || 'U')[0].toUpperCase())}</div>
+            <div>
+              <strong>${escapeHTML(u.username || 'User')}</strong>
+              <div style="font-size: 0.72rem; color: var(--text-muted);">${escapeHTML(u.id)}</div>
+            </div>
+          </div>
+        </td>
+        <td>${escapeHTML(u.email)}</td>
+        <td>
+          <span class="${isAdmin ? 'badge-role-admin' : 'badge-role-user'}">${isAdmin ? '⚡ ADMIN' : 'USER'}</span>
+        </td>
+        <td>
+          <span class="${isVIP ? 'badge-plan-vip' : 'badge-plan-free'}">${isVIP ? '👑 VIP MEMBER' : 'FREE'}</span>
+        </td>
+        <td>${u.profilesCount || 1}</td>
+        <td>
+          <div class="admin-actions-cell">
+            <button class="btn-admin-action ${isVIP ? 'btn-revoke-vip' : 'btn-grant-vip'}" data-action="toggle-vip" data-user="${escapeHTML(u.id)}" data-plan="${isVIP ? 'free' : 'vip'}">
+              ${isVIP ? 'Revoke VIP' : '⭐ Grant VIP'}
+            </button>
+            <button class="btn-admin-action" data-action="toggle-admin" data-user="${escapeHTML(u.id)}" data-role="${isAdmin ? 'user' : 'admin'}">
+              ${isAdmin ? 'Demote' : 'Make Admin'}
+            </button>
+            ${!isAdmin ? `<button class="btn-admin-action" style="color: #ef4444;" data-action="delete-user" data-user="${escapeHTML(u.id)}" data-name="${escapeHTML(u.username)}">🗑️</button>` : ''}
+          </div>
+        </td>
+      `;
+
+      // Event listeners for row buttons
+      tr.querySelector('[data-action="toggle-vip"]').addEventListener('click', async (e) => {
+        const uid = e.currentTarget.dataset.user;
+        const newPlan = e.currentTarget.dataset.plan;
+        await setAdminUserTier(uid, newPlan);
+      });
+
+      tr.querySelector('[data-action="toggle-admin"]').addEventListener('click', async (e) => {
+        const uid = e.currentTarget.dataset.user;
+        const newRole = e.currentTarget.dataset.role;
+        await setAdminUserRole(uid, newRole);
+      });
+
+      const delBtn = tr.querySelector('[data-action="delete-user"]');
+      if (delBtn) {
+        delBtn.addEventListener('click', async (e) => {
+          const uid = e.currentTarget.dataset.user;
+          const uname = e.currentTarget.dataset.name;
+          if (confirm(`Are you sure you want to permanently delete account "${uname}"?`)) {
+            await deleteAdminUser(uid);
+          }
+        });
+      }
+
+      el.adminUsersTableBody.appendChild(tr);
+    });
+  }
+
+  async function setAdminUserTier(userId, plan) {
+    try {
+      const res = await fetchAPI('/api/admin/users/tier', {
+        method: 'POST',
+        body: { userId, plan }
+      });
+      showToast(res.message || 'Plan updated successfully');
+      await loadAdminUsers();
+      if (state.currentUser && state.currentUser.id === userId) {
+        state.currentUser.plan = plan;
+        state.currentUser.isVIP = plan === 'vip';
+        renderNavUserUI();
+        showProfileView();
+      }
+    } catch (err) {
+      showToast(`Error: ${err.message}`);
+    }
+  }
+
+  async function setAdminUserRole(userId, role) {
+    try {
+      const res = await fetchAPI('/api/admin/users/role', {
+        method: 'POST',
+        body: { userId, role }
+      });
+      showToast(res.message || 'Role updated successfully');
+      await loadAdminUsers();
+      if (state.currentUser && state.currentUser.id === userId) {
+        state.currentUser.role = role;
+        renderNavUserUI();
+        showProfileView();
+      }
+    } catch (err) {
+      showToast(`Error: ${err.message}`);
+    }
+  }
+
+  async function deleteAdminUser(userId) {
+    try {
+      const res = await fetchAPI(`/api/admin/users/${userId}`, { method: 'DELETE' });
+      showToast(res.message || 'Account removed');
+      await loadAdminUsers();
+    } catch (err) {
+      showToast(`Error: ${err.message}`);
+    }
   }
 
   // --- Auth Modal (Login / Register) ---
@@ -1572,6 +1983,13 @@
 
   // --- Video Streaming Player Modal ---
   async function openPlayerModal(item, preferredSeason = 1, preferredEpisode = 1) {
+    // Require user to have an account to stream movies and shows
+    if (!state.currentUser || !state.authToken) {
+      openAuthModal('register');
+      showToast('🔒 Please create a free account or sign in to start watching.');
+      return;
+    }
+
     const id = item.id;
     const type = item.media_type === 'tv' || item.first_air_date ? 'tv' : 'movie';
     const title = item.title || item.name || 'Untitled';
@@ -1647,26 +2065,32 @@
         throw new Error('No stream servers returned');
       }
     } catch (err) {
+      if (err.status === 401 || (err.message && err.message.includes('Account required'))) {
+        closePlayerModal();
+        openAuthModal('register');
+        showToast('🔒 Please sign in or create an account to watch.');
+        return;
+      }
       console.warn('Backend stream API fallback:', err.message);
       // Instant client-side fallback to top embed providers
       if (type === 'tv') {
         state.player.streamSources = [
+          { name: 'VidLink (Ad-Free HD)', url: `https://vidlink.pro/tv/${id}/${season}/${episode}`, speed: 'Fast' },
           { name: 'VidSrc (Fast)', url: `https://vidsrc.to/embed/tv/${id}/${season}/${episode}`, speed: 'Fast' },
           { name: 'Embed.su', url: `https://embed.su/embed/tv/${id}/${season}/${episode}`, speed: 'Ultra' },
           { name: 'VidSrc.xyz', url: `https://vidsrc.xyz/embed/tv/${id}/${season}/${episode}`, speed: 'Standard' },
           { name: 'SuperEmbed', url: `https://multiembed.mov/?video_id=${id}&tmdb=1&s=${season}&e=${episode}`, speed: 'Fast' },
           { name: '2Embed', url: `https://www.2embed.cc/embedtv/${id}&s=${season}&e=${episode}`, speed: 'Standard' },
-          { name: 'VidLink', url: `https://vidlink.pro/tv/${id}/${season}/${episode}`, speed: 'Fast' },
           { name: 'AutoEmbed', url: `https://player.autoembed.cc/embed/tv/${id}/${season}/${episode}`, speed: 'Fast' }
         ];
       } else {
         state.player.streamSources = [
+          { name: 'VidLink (Ad-Free HD)', url: `https://vidlink.pro/movie/${id}`, speed: 'Fast' },
           { name: 'VidSrc (Fast)', url: `https://vidsrc.to/embed/movie/${id}`, speed: 'Fast' },
           { name: 'Embed.su', url: `https://embed.su/embed/movie/${id}`, speed: 'Ultra' },
           { name: 'VidSrc.xyz', url: `https://vidsrc.xyz/embed/movie/${id}`, speed: 'Standard' },
           { name: 'SuperEmbed', url: `https://multiembed.mov/?video_id=${id}&tmdb=1`, speed: 'Fast' },
           { name: '2Embed', url: `https://www.2embed.cc/embed/${id}`, speed: 'Standard' },
-          { name: 'VidLink', url: `https://vidlink.pro/movie/${id}`, speed: 'Fast' },
           { name: 'AutoEmbed', url: `https://player.autoembed.cc/embed/movie/${id}`, speed: 'Fast' }
         ];
       }
@@ -1705,11 +2129,38 @@
       window.open(server.url, '_blank', 'noopener,noreferrer');
     };
 
+    if (state.player.isAdShieldActive) {
+      el.videoIframe.setAttribute('sandbox', 'allow-forms allow-scripts allow-same-origin allow-presentation');
+    } else {
+      el.videoIframe.removeAttribute('sandbox');
+    }
+
     el.videoIframe.src = server.url;
     el.videoIframe.onload = () => {
       setTimeout(() => el.playerLoader.classList.add('hidden'), 500);
     };
     setTimeout(() => el.playerLoader.classList.add('hidden'), 2500);
+  }
+
+  function updateAdShieldUI() {
+    if (!el.modalAdShieldBtn) return;
+    if (state.player.isAdShieldActive) {
+      el.modalAdShieldBtn.className = 'ad-shield-pill active';
+      el.modalAdShieldBtn.innerHTML = '<span class="shield-dot"></span><span>Ad Shield: ON</span>';
+      el.modalAdShieldBtn.title = 'Anti-Popup Ad Shield: ON (Blocks mobile popups & screen click ads)';
+      if (el.videoIframe) {
+        el.videoIframe.setAttribute('sandbox', 'allow-forms allow-scripts allow-same-origin allow-presentation');
+      }
+      showToast('🛡️ Ad Shield ON: Screen-click popups blocked');
+    } else {
+      el.modalAdShieldBtn.className = 'ad-shield-pill shield-off';
+      el.modalAdShieldBtn.innerHTML = '<span class="shield-dot"></span><span>Ad Shield: OFF</span>';
+      el.modalAdShieldBtn.title = 'Ad Shield: OFF (Popups allowed - click to re-enable)';
+      if (el.videoIframe) {
+        el.videoIframe.removeAttribute('sandbox');
+      }
+      showToast('⚠️ Ad Shield OFF: Popups unblocked');
+    }
   }
 
   async function fetchMediaExtendedDetails(type, id) {
@@ -2285,10 +2736,36 @@
     }
 
     if (el.profileMenuSubscription) {
-      el.profileMenuSubscription.addEventListener('click', () => {
-        showToast('👑 VIP Membership Active: 4K Ultra HD & All Servers Unlocked');
+      el.profileMenuSubscription.addEventListener('click', openVipModal);
+    }
+
+    if (el.profileMenuAdmin) {
+      el.profileMenuAdmin.addEventListener('click', openAdminModal);
+    }
+
+    // VIP Modal Listeners
+    if (el.vipCloseBtn) el.vipCloseBtn.addEventListener('click', closeVipModal);
+    if (el.vipStripeCheckoutBtn) el.vipStripeCheckoutBtn.addEventListener('click', handleStripeCheckout);
+    if (el.vipModal) {
+      el.vipModal.addEventListener('click', (e) => {
+        if (e.target === el.vipModal) closeVipModal();
       });
     }
+
+    // Admin Command Center Listeners
+    if (el.navAdminBtn) el.navAdminBtn.addEventListener('click', openAdminModal);
+    if (el.menuAdminBtn) el.menuAdminBtn.addEventListener('click', () => { closeDropdown(); openAdminModal(); });
+    if (el.mobileAdminBtn) el.mobileAdminBtn.addEventListener('click', () => { if (el.mobileDrawer) el.mobileDrawer.classList.remove('open'); openAdminModal(); });
+    if (el.adminCloseBtn) el.adminCloseBtn.addEventListener('click', closeAdminModal);
+    if (el.adminModal) {
+      el.adminModal.addEventListener('click', (e) => {
+        if (e.target === el.adminModal) closeAdminModal();
+      });
+    }
+    if (el.adminTabAnalyticsBtn) el.adminTabAnalyticsBtn.addEventListener('click', () => switchAdminTab('analytics'));
+    if (el.adminTabUsersBtn) el.adminTabUsersBtn.addEventListener('click', () => switchAdminTab('users'));
+    if (el.adminRefreshUsersBtn) el.adminRefreshUsersBtn.addEventListener('click', loadAdminUsers);
+    if (el.adminUserSearchInput) el.adminUserSearchInput.addEventListener('input', (e) => renderAdminUsersTable(e.target.value));
 
     if (el.profileMenuAccount) {
       el.profileMenuAccount.addEventListener('click', () => {
@@ -2303,6 +2780,12 @@
     }
 
     // Player Modal Controls
+    if (el.modalAdShieldBtn) {
+      el.modalAdShieldBtn.addEventListener('click', () => {
+        state.player.isAdShieldActive = !state.player.isAdShieldActive;
+        updateAdShieldUI();
+      });
+    }
     el.modalCloseBtn.addEventListener('click', closePlayerModal);
     el.playerModal.addEventListener('click', (e) => {
       if (e.target === el.playerModal) closePlayerModal();
@@ -2316,12 +2799,14 @@
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
         if (el.brochureModal && el.brochureModal.classList.contains('active')) closeBrochureModal();
-        if (el.playerModal.classList.contains('active')) closePlayerModal();
-        if (el.authModal.classList.contains('active')) closeAuthModal();
+        if (el.playerModal && el.playerModal.classList.contains('active')) closePlayerModal();
+        if (el.vipModal && el.vipModal.classList.contains('active')) closeVipModal();
+        if (el.adminModal && el.adminModal.classList.contains('active')) closeAdminModal();
+        if (el.authModal && el.authModal.classList.contains('active')) closeAuthModal();
         if (el.starterAuthPanel && el.starterAuthPanel.style.display === 'block') closeStarterAuth();
-        if (el.profileEditModal.classList.contains('active')) closeProfileEditModal();
-        if (el.accountHubModal.classList.contains('active')) closeAccountHubModal();
-        if (el.profilesScreen.style.display === 'flex' && state.activeProfile) closeProfilesScreen();
+        if (el.profileEditModal && el.profileEditModal.classList.contains('active')) closeProfileEditModal();
+        if (el.accountHubModal && el.accountHubModal.classList.contains('active')) closeAccountHubModal();
+        if (el.profilesScreen && el.profilesScreen.style.display === 'flex' && state.activeProfile) closeProfilesScreen();
       }
       if (e.key === '/' && document.activeElement !== el.searchInput && !el.authModal.classList.contains('active')) {
         e.preventDefault();
@@ -2339,7 +2824,33 @@
     initEventListeners();
     await checkAuthSession();
     loadCatalog(1);
-    console.log('%c🎬 Aurora Streaming Platform with Netflix Profiles active!', 'color: #E50914; font-size: 14px; font-weight: bold;');
+
+    // Check for Stripe Checkout Return URL Params
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('payment') === 'success') {
+      const sessionId = urlParams.get('session_id');
+      const isDemo = urlParams.get('demo') === 'true';
+      window.history.replaceState({}, document.title, window.location.pathname);
+      (async () => {
+        try {
+          const verifyUrl = isDemo ? '/api/stripe/verify-session?demo=true' : `/api/stripe/verify-session?session_id=${sessionId}`;
+          const res = await fetchAPI(verifyUrl);
+          if (res.success && res.user) {
+            state.currentUser = res.user;
+            renderNavUserUI();
+            showProfileView();
+            showToast('🎉 Welcome to Aurora VIP! 100% Ad-Free 4K streaming is active!');
+          }
+        } catch (err) {
+          console.warn('Stripe verification failed:', err.message);
+        }
+      })();
+    } else if (urlParams.get('payment') === 'cancelled') {
+      window.history.replaceState({}, document.title, window.location.pathname);
+      showToast('Payment was cancelled. You remain on the Free plan.');
+    }
+
+    console.log('%c🎬 Aurora Streaming Platform with VIP Subscriptions & Admin Portal active!', 'color: #E50914; font-size: 14px; font-weight: bold;');
   }
 
   if (document.readyState === 'loading') {

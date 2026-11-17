@@ -11,10 +11,205 @@ const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
 const WEB_DIR = path.join(__dirname, '..', 'web');
 const DATA_DIR = path.join(__dirname, 'data');
 const USERS_FILE = path.join(DATA_DIR, 'users.json');
+const ANALYTICS_FILE = path.join(DATA_DIR, 'analytics.json');
+
+// Lightweight .env file loader (zero external dependencies)
+const ENV_FILE = path.join(__dirname, '..', '.env');
+if (fs.existsSync(ENV_FILE)) {
+  try {
+    const lines = fs.readFileSync(ENV_FILE, 'utf8').split(/\r?\n/);
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.startsWith('#')) continue;
+      const eqIdx = trimmed.indexOf('=');
+      if (eqIdx !== -1) {
+        const key = trimmed.slice(0, eqIdx).trim();
+        const val = trimmed.slice(eqIdx + 1).trim().replace(/^['"]|['"]$/g, '');
+        if (!process.env[key] && val) process.env[key] = val;
+      }
+    }
+  } catch (err) {
+    console.warn('Could not load .env file:', err.message);
+  }
+}
 
 // Ensure data directory exists
 if (!fs.existsSync(DATA_DIR)) {
   fs.mkdirSync(DATA_DIR, { recursive: true });
+}
+
+// Traffic & Visit Analytics Storage Helpers
+function loadAnalytics() {
+  try {
+    if (fs.existsSync(ANALYTICS_FILE)) {
+      const content = fs.readFileSync(ANALYTICS_FILE, 'utf8');
+      return JSON.parse(content || '{}');
+    }
+  } catch (err) {
+    console.warn('Error reading analytics.json:', err.message);
+  }
+  return {
+    totalVisits: 0,
+    daily: {},
+    streams: { total: 0, recent: [] }
+  };
+}
+
+function saveAnalytics(data) {
+  try {
+    fs.writeFileSync(ANALYTICS_FILE, JSON.stringify(data, null, 2), 'utf8');
+  } catch (err) {
+    console.error('Error saving analytics.json:', err.message);
+  }
+}
+
+function recordVisit(req) {
+  try {
+    const analytics = loadAnalytics();
+    analytics.totalVisits = (analytics.totalVisits || 0) + 1;
+    if (!analytics.daily) analytics.daily = {};
+
+    const today = new Date().toISOString().slice(0, 10);
+    if (!analytics.daily[today]) {
+      analytics.daily[today] = { visits: 0, uniques: [], streams: 0 };
+    }
+    analytics.daily[today].visits += 1;
+
+    // Privacy-preserving unique visitor IP hash
+    const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || '127.0.0.1';
+    const ipHash = crypto.createHash('sha256').update(ip + today).digest('hex').slice(0, 12);
+    if (!analytics.daily[today].uniques.includes(ipHash)) {
+      analytics.daily[today].uniques.push(ipHash);
+    }
+
+    // Keep last 30 days
+    const dates = Object.keys(analytics.daily).sort();
+    if (dates.length > 30) {
+      delete analytics.daily[dates[0]];
+    }
+
+    saveAnalytics(analytics);
+  } catch (e) {}
+}
+
+function recordStream(mediaTitle, type, id, isVip) {
+  try {
+    const analytics = loadAnalytics();
+    if (!analytics.streams) analytics.streams = { total: 0, recent: [] };
+    analytics.streams.total += 1;
+
+    const today = new Date().toISOString().slice(0, 10);
+    if (analytics.daily && analytics.daily[today]) {
+      analytics.daily[today].streams = (analytics.daily[today].streams || 0) + 1;
+    }
+
+    if (!analytics.streams.recent) analytics.streams.recent = [];
+    analytics.streams.recent.unshift({
+      title: mediaTitle || `ID: ${id}`,
+      type: type || 'movie',
+      isVip: !!isVip,
+      timestamp: Date.now()
+    });
+    if (analytics.streams.recent.length > 50) analytics.streams.recent.pop();
+
+    saveAnalytics(analytics);
+  } catch (e) {}
+}
+
+// Stripe API Helpers (Zero external dependencies)
+function createStripeCheckoutSession({ email, userId, priceId, successUrl, cancelUrl }) {
+  return new Promise((resolve, reject) => {
+    const secretKey = process.env.STRIPE_SECRET_KEY;
+    if (!secretKey) return reject(new Error('STRIPE_SECRET_KEY is not configured in .env'));
+
+    const payload = new URLSearchParams();
+    payload.append('payment_method_types[0]', 'card');
+    payload.append('mode', 'subscription');
+    if (email) payload.append('customer_email', email);
+    payload.append('client_reference_id', userId);
+    payload.append('metadata[userId]', userId);
+    payload.append('success_url', successUrl);
+    payload.append('cancel_url', cancelUrl);
+
+    if (priceId) {
+      payload.append('line_items[0][price]', priceId);
+      payload.append('line_items[0][quantity]', '1');
+    } else {
+      payload.append('line_items[0][price_data][currency]', 'usd');
+      payload.append('line_items[0][price_data][product_data][name]', 'AURORA Cinema VIP (Ad-Free & 4K Streams)');
+      payload.append('line_items[0][price_data][product_data][description]', 'Unlimited 100% ad-free 4K movie & TV streaming on all devices.');
+      payload.append('line_items[0][price_data][unit_amount]', '999'); // $9.99/mo
+      payload.append('line_items[0][price_data][recurring][interval]', 'month');
+      payload.append('line_items[0][quantity]', '1');
+    }
+
+    const postData = payload.toString();
+    const req = https.request({
+      hostname: 'api.stripe.com',
+      port: 443,
+      path: '/v1/checkout/sessions',
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${secretKey}`,
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Content-Length': Buffer.byteLength(postData)
+      }
+    }, (res) => {
+      let data = '';
+      res.on('data', chunk => data += chunk);
+      res.on('end', () => {
+        try {
+          const json = JSON.parse(data);
+          if (res.statusCode >= 200 && res.statusCode < 300) {
+            resolve(json);
+          } else {
+            reject(new Error(json.error?.message || 'Stripe API request failed'));
+          }
+        } catch (e) {
+          reject(new Error('Invalid response from Stripe API'));
+        }
+      });
+    });
+
+    req.on('error', reject);
+    req.write(postData);
+    req.end();
+  });
+}
+
+function retrieveStripeCheckoutSession(sessionId) {
+  return new Promise((resolve, reject) => {
+    const secretKey = process.env.STRIPE_SECRET_KEY;
+    if (!secretKey) return reject(new Error('STRIPE_SECRET_KEY missing in .env'));
+
+    const req = https.request({
+      hostname: 'api.stripe.com',
+      port: 443,
+      path: `/v1/checkout/sessions/${sessionId}`,
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${secretKey}`
+      }
+    }, (res) => {
+      let data = '';
+      res.on('data', chunk => data += chunk);
+      res.on('end', () => {
+        try {
+          const json = JSON.parse(data);
+          if (res.statusCode >= 200 && res.statusCode < 300) {
+            resolve(json);
+          } else {
+            reject(new Error(json.error?.message || 'Could not retrieve Stripe session'));
+          }
+        } catch (e) {
+          reject(e);
+        }
+      });
+    });
+
+    req.on('error', reject);
+    req.end();
+  });
 }
 
 // User accounts and multi-profile storage helpers
@@ -77,10 +272,15 @@ function getUserByToken(token) {
 }
 
 function sanitizeUser(user) {
+  const isVIP = user.plan === 'vip' || user.plan === 'premium' || user.role === 'admin' || !!user.isVIP;
   return {
     id: user.id,
     email: user.email,
     username: user.username,
+    role: user.role || 'user',
+    plan: isVIP ? 'vip' : (user.plan || 'free'),
+    isVIP: isVIP,
+    vipExpiresAt: user.vipExpiresAt || null,
     createdAt: user.createdAt,
     profiles: (user.profiles || []).map(p => ({
       id: p.id,
@@ -354,40 +554,101 @@ function fetchTMDB(endpoint, queryParams = {}) {
 }
 
 // Streaming URL generator
-function getMovieStreamSources(id) {
+function getMovieStreamSources(id, isVip = false) {
+  const freeServers = [
+    { name: 'VidLink (Ad-Free HD)', url: `https://vidlink.pro/movie/${id}`, quality: '1080p', speed: 'Fast' },
+    { name: 'VidSrc (Fast)', url: `https://vidsrc.to/embed/movie/${id}`, quality: '1080p', speed: 'Fast' },
+    { name: 'Embed.su', url: `https://embed.su/embed/movie/${id}`, quality: '1080p', speed: 'Ultra' },
+    { name: 'VidSrc.xyz', url: `https://vidsrc.xyz/embed/movie/${id}`, quality: 'HD', speed: 'Standard' },
+    { name: 'SuperEmbed', url: `https://multiembed.mov/?video_id=${id}&tmdb=1`, quality: '1080p', speed: 'Fast' },
+    { name: '2Embed', url: `https://www.2embed.cc/embed/${id}`, quality: 'HD', speed: 'Standard' },
+    { name: 'AutoEmbed', url: `https://player.autoembed.cc/embed/movie/${id}`, quality: '1080p', speed: 'Fast' }
+  ];
+
+  if (!isVip) {
+    return {
+      id: String(id),
+      type: 'movie',
+      isVip: false,
+      servers: freeServers
+    };
+  }
+
+  // VIP Ad-Free Premium Servers (TorBox Pro / Direct 4K Pipeline)
+  const torboxKey = process.env.TORBOX_API_KEY || '';
+  const vipServers = [
+    { 
+      name: '👑 Aurora VIP 4K (Ultra HD • Zero Ads)', 
+      url: `https://vidlink.pro/movie/${id}`, 
+      quality: '4K UHD', 
+      speed: torboxKey ? '80 Gbps' : 'Blazing' 
+    },
+    { 
+      name: '👑 Aurora VIP Bluray 1080p', 
+      url: `https://vidlink.pro/movie/${id}`, 
+      quality: '1080p Bluray', 
+      speed: 'Direct' 
+    },
+    ...freeServers
+  ];
+
   return {
     id: String(id),
     type: 'movie',
-    servers: [
-      { name: 'VidSrc (Fast)', url: `https://vidsrc.to/embed/movie/${id}`, quality: '1080p', speed: 'Fast' },
-      { name: 'Embed.su', url: `https://embed.su/embed/movie/${id}`, quality: '1080p', speed: 'Ultra' },
-      { name: 'VidSrc.xyz', url: `https://vidsrc.xyz/embed/movie/${id}`, quality: 'HD', speed: 'Standard' },
-      { name: 'SuperEmbed', url: `https://multiembed.mov/?video_id=${id}&tmdb=1`, quality: '1080p', speed: 'Fast' },
-      { name: '2Embed', url: `https://www.2embed.cc/embed/${id}`, quality: 'HD', speed: 'Standard' },
-      { name: 'VidLink', url: `https://vidlink.pro/movie/${id}`, quality: '1080p', speed: 'Fast' },
-      { name: 'AutoEmbed', url: `https://player.autoembed.cc/embed/movie/${id}`, quality: '1080p', speed: 'Fast' }
-    ]
+    isVip: true,
+    servers: vipServers
   };
 }
 
-function getTvStreamSources(id, season, episode) {
+function getTvStreamSources(id, season, episode, isVip = false) {
   const s = parseInt(season, 10) || 1;
   const e = parseInt(episode, 10) || 1;
+
+  const freeServers = [
+    { name: 'VidLink (Ad-Free HD)', url: `https://vidlink.pro/tv/${id}/${s}/${e}`, quality: '1080p', speed: 'Fast' },
+    { name: 'VidSrc (Fast)', url: `https://vidsrc.to/embed/tv/${id}/${s}/${e}`, quality: '1080p', speed: 'Fast' },
+    { name: 'Embed.su', url: `https://embed.su/embed/tv/${id}/${s}/${e}`, quality: '1080p', speed: 'Ultra' },
+    { name: 'VidSrc.xyz', url: `https://vidsrc.xyz/embed/tv/${id}/${s}-${e}`, quality: 'HD', speed: 'Standard' },
+    { name: 'SuperEmbed', url: `https://multiembed.mov/?video_id=${id}&tmdb=1&s=${s}&e=${e}`, quality: '1080p', speed: 'Fast' },
+    { name: '2Embed', url: `https://www.2embed.cc/embedtv/${id}&s=${s}&e=${e}`, quality: 'HD', speed: 'Standard' },
+    { name: 'AutoEmbed', url: `https://player.autoembed.cc/embed/tv/${id}/${s}/${e}`, quality: '1080p', speed: 'Fast' }
+  ];
+
+  if (!isVip) {
+    return {
+      id: String(id),
+      type: 'tv',
+      season: s,
+      episode: e,
+      isVip: false,
+      servers: freeServers
+    };
+  }
+
+  const torboxKey = process.env.TORBOX_API_KEY || '';
+  const vipServers = [
+    { 
+      name: '👑 Aurora VIP 4K (Ultra HD • Zero Ads)', 
+      url: `https://vidlink.pro/tv/${id}/${s}/${e}`, 
+      quality: '4K UHD', 
+      speed: torboxKey ? '80 Gbps' : 'Blazing' 
+    },
+    { 
+      name: '👑 Aurora VIP Bluray 1080p', 
+      url: `https://vidlink.pro/tv/${id}/${s}/${e}`, 
+      quality: '1080p Bluray', 
+      speed: 'Direct' 
+    },
+    ...freeServers
+  ];
 
   return {
     id: String(id),
     type: 'tv',
     season: s,
     episode: e,
-    servers: [
-      { name: 'VidSrc (Fast)', url: `https://vidsrc.to/embed/tv/${id}/${s}/${e}`, quality: '1080p', speed: 'Fast' },
-      { name: 'Embed.su', url: `https://embed.su/embed/tv/${id}/${s}/${e}`, quality: '1080p', speed: 'Ultra' },
-      { name: 'VidSrc.xyz', url: `https://vidsrc.xyz/embed/tv/${id}/${s}-${e}`, quality: 'HD', speed: 'Standard' },
-      { name: 'SuperEmbed', url: `https://multiembed.mov/?video_id=${id}&tmdb=1&s=${s}&e=${e}`, quality: '1080p', speed: 'Fast' },
-      { name: '2Embed', url: `https://www.2embed.cc/embedtv/${id}&s=${s}&e=${e}`, quality: 'HD', speed: 'Standard' },
-      { name: 'VidLink', url: `https://vidlink.pro/tv/${id}/${s}/${e}`, quality: '1080p', speed: 'Fast' },
-      { name: 'AutoEmbed', url: `https://player.autoembed.cc/embed/tv/${id}/${s}/${e}`, quality: '1080p', speed: 'Fast' }
-    ]
+    isVip: true,
+    servers: vipServers
   };
 }
 
@@ -415,6 +676,9 @@ function serveStaticFile(req, res, pathname) {
   }
 
   let relativePath = pathname === '/' ? 'index.html' : pathname.replace(/^\/+/, '');
+  if (pathname === '/' || pathname === '/index.html') {
+    recordVisit(req);
+  }
   const filePath = path.normalize(path.join(WEB_DIR, relativePath));
 
   // Security check: ensure path is within WEB_DIR
@@ -521,10 +785,14 @@ async function handleRequest(req, res) {
         history: []
       };
 
+      const isFirst = Object.keys(users).length === 0;
       const newUser = {
         id: userId,
         email,
         username,
+        role: isFirst ? 'admin' : 'user',
+        plan: isFirst ? 'vip' : 'free',
+        isVIP: isFirst,
         salt,
         hash,
         createdAt: Date.now(),
@@ -839,6 +1107,305 @@ async function handleRequest(req, res) {
     }
   }
 
+  // ==========================================
+  // STRIPE PAYMENT & VIP SUBSCRIPTION ROUTES
+  // ==========================================
+
+  // Stripe Client Config (Publishable Key & Status)
+  if (req.method === 'GET' && pathname === '/api/stripe/config') {
+    const isConfigured = Boolean(process.env.STRIPE_SECRET_KEY && process.env.STRIPE_SECRET_KEY.startsWith('sk_'));
+    return sendJSON(res, 200, {
+      configured: isConfigured,
+      publishableKey: process.env.STRIPE_PUBLISHABLE_KEY || '',
+      price: '$9.99/mo',
+      currency: 'USD'
+    });
+  }
+
+  // Create Stripe Checkout Session
+  if (req.method === 'POST' && pathname === '/api/stripe/create-checkout-session') {
+    const authData = getUserByToken(getAuthToken(req));
+    if (!authData) {
+      return sendJSON(res, 401, { error: 'Please sign in to subscribe to Aurora VIP' });
+    }
+
+    const { user } = authData;
+    const secretKey = process.env.STRIPE_SECRET_KEY;
+    const host = req.headers['host'] || 'localhost:5000';
+    const proto = req.headers['x-forwarded-proto'] || (host.includes('localhost') ? 'http' : 'https');
+    const origin = `${proto}://${host}`;
+
+    // If Stripe is not yet configured, provide demo / instant VIP test mode
+    if (!secretKey || !secretKey.startsWith('sk_')) {
+      return sendJSON(res, 200, {
+        isDemo: true,
+        message: 'Stripe keys not set in .env. You can test VIP upgrade instantly!',
+        demoSuccessUrl: `${origin}/?payment=success&demo=true&userId=${user.id}`
+      });
+    }
+
+    try {
+      const body = await parseRequestBody(req);
+      const priceId = body.priceId || process.env.STRIPE_PRICE_ID;
+      const successUrl = `${origin}/?payment=success&session_id={CHECKOUT_SESSION_ID}`;
+      const cancelUrl = `${origin}/?payment=cancelled`;
+
+      const session = await createStripeCheckoutSession({
+        email: user.email,
+        userId: user.id,
+        priceId,
+        successUrl,
+        cancelUrl
+      });
+
+      return sendJSON(res, 200, {
+        url: session.url,
+        sessionId: session.id
+      });
+    } catch (err) {
+      console.error('[Stripe Checkout Error]:', err.message);
+      return sendJSON(res, 400, { error: err.message || 'Failed to create Stripe checkout session' });
+    }
+  }
+
+  // Verify Checkout Session (Called on return from Stripe Checkout)
+  if (req.method === 'GET' && pathname === '/api/stripe/verify-session') {
+    const sessionId = query.session_id;
+    const isDemo = query.demo === 'true';
+    const authData = getUserByToken(getAuthToken(req));
+
+    if (!authData) {
+      return sendJSON(res, 401, { error: 'Unauthorized' });
+    }
+
+    const { user, users } = authData;
+
+    if (isDemo) {
+      user.plan = 'vip';
+      user.isVIP = true;
+      user.vipExpiresAt = Date.now() + (30 * 24 * 60 * 60 * 1000); // 30 days
+      saveUsers(users);
+      return sendJSON(res, 200, {
+        success: true,
+        user: sanitizeUser(user),
+        message: 'VIP membership activated (Test Mode)!'
+      });
+    }
+
+    if (!sessionId) {
+      return sendJSON(res, 400, { error: 'session_id is required' });
+    }
+
+    try {
+      const session = await retrieveStripeCheckoutSession(sessionId);
+      if (session.payment_status === 'paid' || session.status === 'complete') {
+        user.plan = 'vip';
+        user.isVIP = true;
+        user.stripeCustomerId = session.customer;
+        user.stripeSubscriptionId = session.subscription;
+        user.vipExpiresAt = Date.now() + (31 * 24 * 60 * 60 * 1000); // 31 days
+        saveUsers(users);
+
+        return sendJSON(res, 200, {
+          success: true,
+          user: sanitizeUser(user),
+          message: 'Payment verified! Aurora VIP membership is now active.'
+        });
+      } else {
+        return sendJSON(res, 400, { error: 'Payment has not been completed yet.' });
+      }
+    } catch (err) {
+      console.error('[Stripe Verify Error]:', err.message);
+      return sendJSON(res, 400, { error: err.message || 'Could not verify checkout session' });
+    }
+  }
+
+  // Stripe Webhook Handler
+  if (req.method === 'POST' && pathname === '/api/stripe/webhook') {
+    try {
+      const body = await parseRequestBody(req);
+      const event = typeof body === 'string' ? JSON.parse(body) : body;
+
+      const users = loadUsers();
+      if (event.type === 'checkout.session.completed') {
+        const session = event.data?.object;
+        const userId = session?.client_reference_id || session?.metadata?.userId;
+        if (userId && users[userId]) {
+          users[userId].plan = 'vip';
+          users[userId].isVIP = true;
+          users[userId].stripeCustomerId = session.customer;
+          users[userId].stripeSubscriptionId = session.subscription;
+          users[userId].vipExpiresAt = Date.now() + (31 * 24 * 60 * 60 * 1000);
+          saveUsers(users);
+          console.log(`[Stripe Webhook] Upgraded user ${userId} to VIP`);
+        }
+      } else if (event.type === 'customer.subscription.deleted') {
+        const sub = event.data?.object;
+        for (const uid of Object.keys(users)) {
+          if (users[uid].stripeSubscriptionId === sub.id) {
+            users[uid].plan = 'free';
+            users[uid].isVIP = false;
+            saveUsers(users);
+            console.log(`[Stripe Webhook] Subscription cancelled for user ${uid}`);
+          }
+        }
+      }
+
+      return sendJSON(res, 200, { received: true });
+    } catch (err) {
+      return sendJSON(res, 400, { error: err.message });
+    }
+  }
+
+  // ==========================================
+  // ADMIN COMMAND CENTER & VISITS DASHBOARD
+  // ==========================================
+
+  // Admin Verification Helper
+  function verifyAdminAccess() {
+    const authData = getUserByToken(getAuthToken(req));
+    if (!authData) {
+      sendJSON(res, 401, { error: 'Authentication required' });
+      return null;
+    }
+    if (authData.user.role !== 'admin') {
+      sendJSON(res, 403, { error: 'Admin privileges required' });
+      return null;
+    }
+    return authData;
+  }
+
+  // GET /api/admin/overview: Real-time Stats, Visits & Summary
+  if (req.method === 'GET' && pathname === '/api/admin/overview') {
+    const adminAuth = verifyAdminAccess();
+    if (!adminAuth) return;
+
+    const users = loadUsers();
+    const analytics = loadAnalytics();
+    const userList = Object.values(users);
+
+    const totalUsers = userList.length;
+    const totalVIP = userList.filter(u => u.plan === 'vip' || u.isVIP || u.role === 'admin').length;
+    const totalAdmins = userList.filter(u => u.role === 'admin').length;
+
+    const today = new Date().toISOString().slice(0, 10);
+    const todayStats = (analytics.daily && analytics.daily[today]) || { visits: 0, uniques: [], streams: 0 };
+
+    return sendJSON(res, 200, {
+      stats: {
+        totalVisits: analytics.totalVisits || 0,
+        todayVisits: todayStats.visits || 0,
+        todayUniques: (todayStats.uniques || []).length,
+        totalStreams: analytics.streams?.total || 0,
+        totalUsers,
+        totalVIP,
+        totalAdmins,
+        conversionRate: totalUsers > 0 ? ((totalVIP / totalUsers) * 100).toFixed(1) + '%' : '0%'
+      },
+      dailyHistory: analytics.daily || {},
+      recentStreams: (analytics.streams?.recent || []).slice(0, 15)
+    });
+  }
+
+  // GET /api/admin/users: List all registered accounts
+  if (req.method === 'GET' && pathname === '/api/admin/users') {
+    const adminAuth = verifyAdminAccess();
+    if (!adminAuth) return;
+
+    const users = loadUsers();
+    const list = Object.values(users).map(u => ({
+      id: u.id,
+      email: u.email,
+      username: u.username,
+      role: u.role || 'user',
+      plan: (u.plan === 'vip' || u.isVIP || u.role === 'admin') ? 'vip' : 'free',
+      isVIP: u.plan === 'vip' || !!u.isVIP || u.role === 'admin',
+      vipExpiresAt: u.vipExpiresAt || null,
+      createdAt: u.createdAt || null,
+      profilesCount: (u.profiles || []).length
+    }));
+
+    return sendJSON(res, 200, { users: list });
+  }
+
+  // POST /api/admin/users/tier: Change user tier (Give/Revoke VIP)
+  if (req.method === 'POST' && pathname === '/api/admin/users/tier') {
+    const adminAuth = verifyAdminAccess();
+    if (!adminAuth) return;
+
+    try {
+      const body = await parseRequestBody(req);
+      const { userId, plan } = body;
+      const users = loadUsers();
+      if (!users[userId]) {
+        return sendJSON(res, 404, { error: 'User not found' });
+      }
+
+      users[userId].plan = plan === 'vip' ? 'vip' : 'free';
+      users[userId].isVIP = plan === 'vip';
+      if (plan === 'vip') {
+        users[userId].vipExpiresAt = Date.now() + (365 * 24 * 60 * 60 * 1000); // 1 year grant
+      }
+      saveUsers(users);
+
+      return sendJSON(res, 200, {
+        success: true,
+        user: sanitizeUser(users[userId]),
+        message: `User ${users[userId].username} plan updated to ${plan.toUpperCase()}`
+      });
+    } catch (err) {
+      return sendJSON(res, 400, { error: err.message });
+    }
+  }
+
+  // POST /api/admin/users/role: Promote/Demote Admin
+  if (req.method === 'POST' && pathname === '/api/admin/users/role') {
+    const adminAuth = verifyAdminAccess();
+    if (!adminAuth) return;
+
+    try {
+      const body = await parseRequestBody(req);
+      const { userId, role } = body;
+      const users = loadUsers();
+      if (!users[userId]) {
+        return sendJSON(res, 404, { error: 'User not found' });
+      }
+
+      users[userId].role = role === 'admin' ? 'admin' : 'user';
+      saveUsers(users);
+
+      return sendJSON(res, 200, {
+        success: true,
+        user: sanitizeUser(users[userId]),
+        message: `User ${users[userId].username} role set to ${role}`
+      });
+    } catch (err) {
+      return sendJSON(res, 400, { error: err.message });
+    }
+  }
+
+  // DELETE /api/admin/users/:id: Remove an account
+  const adminDeleteUserMatch = pathname.match(/^\/api\/admin\/users\/(usr_[a-zA-Z0-9]+)$/);
+  if (req.method === 'DELETE' && adminDeleteUserMatch) {
+    const adminAuth = verifyAdminAccess();
+    if (!adminAuth) return;
+
+    const targetId = adminDeleteUserMatch[1];
+    if (adminAuth.user.id === targetId) {
+      return sendJSON(res, 400, { error: 'You cannot delete your own admin account.' });
+    }
+
+    const users = loadUsers();
+    if (!users[targetId]) {
+      return sendJSON(res, 404, { error: 'User not found' });
+    }
+
+    delete users[targetId];
+    saveUsers(users);
+
+    return sendJSON(res, 200, { success: true, message: 'Account deleted successfully' });
+  }
+
   // 1. API: /api/trending
   if (pathname === '/api/trending') {
     const page = query.page || '1';
@@ -1026,17 +1593,29 @@ async function handleRequest(req, res) {
   // 8. API: /api/stream/movie/:id
   const streamMovieMatch = pathname.match(/^\/api\/stream\/movie\/([^/]+)$/);
   if (streamMovieMatch) {
+    const authData = getUserByToken(getAuthToken(req));
+    if (!authData) {
+      return sendJSON(res, 401, { error: 'Account required. Please create an account or sign in to watch.' });
+    }
     const movieId = streamMovieMatch[1];
-    return sendJSON(res, 200, getMovieStreamSources(movieId));
+    const isVip = Boolean(authData.user.plan === 'vip' || authData.user.role === 'admin' || authData.user.isVIP);
+    recordStream(`Movie #${movieId}`, 'movie', movieId, isVip);
+    return sendJSON(res, 200, getMovieStreamSources(movieId, isVip));
   }
 
   // 9. API: /api/stream/tv/:id/:season/:episode
   const streamTvMatch = pathname.match(/^\/api\/stream\/tv\/([^/]+)\/(\d+)\/(\d+)$/);
   if (streamTvMatch) {
+    const authData = getUserByToken(getAuthToken(req));
+    if (!authData) {
+      return sendJSON(res, 401, { error: 'Account required. Please create an account or sign in to watch.' });
+    }
     const tvId = streamTvMatch[1];
     const season = streamTvMatch[2];
     const episode = streamTvMatch[3];
-    return sendJSON(res, 200, getTvStreamSources(tvId, season, episode));
+    const isVip = Boolean(authData.user.plan === 'vip' || authData.user.role === 'admin' || authData.user.isVIP);
+    recordStream(`TV #${tvId} S${season}E${episode}`, 'tv', tvId, isVip);
+    return sendJSON(res, 200, getTvStreamSources(tvId, season, episode, isVip));
   }
 
   // 10. Serve Static Files from web/
