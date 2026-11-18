@@ -1384,24 +1384,30 @@
 
   function setAuthModalMode(mode) {
     state.authMode = mode;
+    if (el.authErrorMsg) {
+      el.authErrorMsg.style.display = 'none';
+      el.authErrorMsg.textContent = '';
+    }
     if (mode === 'register') {
-      el.tabSignIn.classList.remove('active');
-      el.tabSignUp.classList.add('active');
-      el.usernameGroup.style.display = 'flex';
-      el.authEmailLabel.textContent = 'Email Address';
-      el.authEmail.placeholder = 'name@example.com';
-      el.authSubmitBtn.textContent = 'Create Account';
-      el.authToggleHint.textContent = 'Already have an account?';
-      el.authSwitchLink.textContent = 'Sign In';
+      el.tabSignIn?.classList.remove('active');
+      el.tabSignUp?.classList.add('active');
+      if (el.usernameGroup) el.usernameGroup.style.display = 'flex';
+      if (el.authEmailLabel) el.authEmailLabel.textContent = 'Email Address';
+      if (el.authEmail) el.authEmail.placeholder = 'name@example.com';
+      if (el.authSubmitBtn) el.authSubmitBtn.textContent = 'Create Account';
+      if (el.authToggleHint) el.authToggleHint.textContent = 'Already have an account?';
+      if (el.authSwitchLink) el.authSwitchLink.textContent = 'Sign In';
+      setTimeout(() => el.authUsername?.focus(), 50);
     } else {
-      el.tabSignIn.classList.add('active');
-      el.tabSignUp.classList.remove('active');
-      el.usernameGroup.style.display = 'none';
-      el.authEmailLabel.textContent = 'Email or Username';
-      el.authEmail.placeholder = 'Enter email or username';
-      el.authSubmitBtn.textContent = 'Sign In';
-      el.authToggleHint.textContent = 'New to Aurora?';
-      el.authSwitchLink.textContent = 'Sign up now';
+      el.tabSignIn?.classList.add('active');
+      el.tabSignUp?.classList.remove('active');
+      if (el.usernameGroup) el.usernameGroup.style.display = 'none';
+      if (el.authEmailLabel) el.authEmailLabel.textContent = 'Email or Username';
+      if (el.authEmail) el.authEmail.placeholder = 'Enter email or username';
+      if (el.authSubmitBtn) el.authSubmitBtn.textContent = 'Sign In';
+      if (el.authToggleHint) el.authToggleHint.textContent = 'New to Aurora?';
+      if (el.authSwitchLink) el.authSwitchLink.textContent = 'Sign up now';
+      setTimeout(() => el.authEmail?.focus(), 50);
     }
   }
 
@@ -1411,10 +1417,18 @@
     el.authSubmitBtn.disabled = true;
 
     try {
-      if (state.authMode === 'register') {
+      // Determine mode directly and unambiguously from UI state
+      const isRegister = el.tabSignUp && el.tabSignUp.classList.contains('active') && 
+                         el.usernameGroup && el.usernameGroup.style.display !== 'none';
+
+      if (isRegister) {
         const username = el.authUsername.value.trim();
         const email = el.authEmail.value.trim();
         const password = el.authPassword.value;
+
+        if (!username) {
+          throw new Error('Please enter a username.');
+        }
 
         const data = await fetchAPI('/api/auth/register', {
           method: 'POST',
@@ -1433,6 +1447,10 @@
       } else {
         const emailOrUsername = el.authEmail.value.trim();
         const password = el.authPassword.value;
+
+        if (!emailOrUsername || !password) {
+          throw new Error('Please enter both your email/username and password.');
+        }
 
         const data = await fetchAPI('/api/auth/login', {
           method: 'POST',
@@ -2580,10 +2598,18 @@
       if (e.target === el.authModal) closeAuthModal();
     });
 
-    el.tabSignIn.addEventListener('click', () => setAuthModalMode('login'));
-    el.tabSignUp.addEventListener('click', () => setAuthModalMode('register'));
-    el.authSwitchLink.addEventListener('click', () => {
-      setAuthModalMode(state.authMode === 'login' ? 'register' : 'login');
+    el.tabSignIn.addEventListener('click', (e) => {
+      if (e) e.preventDefault();
+      setAuthModalMode('login');
+    });
+    el.tabSignUp.addEventListener('click', (e) => {
+      if (e) e.preventDefault();
+      setAuthModalMode('register');
+    });
+    el.authSwitchLink.addEventListener('click', (e) => {
+      if (e) e.preventDefault();
+      const currentIsRegister = el.tabSignUp && el.tabSignUp.classList.contains('active');
+      setAuthModalMode(currentIsRegister ? 'login' : 'register');
     });
 
     el.authForm.addEventListener('submit', handleAuthSubmit);
